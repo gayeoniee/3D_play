@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#f5f6ef"/><title>동글동글 · Eggy on Ice</title>  <script type="module" crossorigin src="./assets/index-UWXBJs4q.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CuV3ugqs.css">
+</head>
+<body><div id="app">
+<header><a class="brand" href="./"><span class="brand-egg">••</span> 동글동글 <span class="brand-sub">EGGY ON ICE</span></a><button id="help" class="quiet">게임 방법 <span>?</span></button></header>
+<main><section class="intro"><div><p class="eyebrow"><span></span> LITTLE EGGS, BIG BUMPS</p><h1>동글동글, <em>밀고 당기고.</em></h1><p class="subtitle">얼음섬부터 숲속까지, 마지막까지 남을 동글이는 누구?</p></div><div class="view-note"><span>◈</span><div>편안한 고정 시점<small>카메라는 가만히, 동글이만 움직여요.</small></div></div></section>
+<section class="map-picker" aria-label="경기장 선택"><div class="map-heading"><span class="eyebrow">CHOOSE YOUR PLAYGROUND</span><h2>오늘은 어디서 놀까?</h2><p id="map-feel"></p></div><div id="maps" class="maps"></div></section>
+<div class="layout"><section class="arena" aria-label="3D 경기장"><div class="arena-top"><span class="pill"><i></i> <span id="phase">연습 준비</span></span><span class="arena-caption">01 &nbsp; / &nbsp; 넓은 얼음섬</span><button id="pause" class="pause" aria-label="일시정지" disabled>Ⅱ</button></div>
+<div id="scene"></div><div class="arena-bottom"><span id="arena-hint">마음에 드는 동글이를 골라주세요</span><span class="fixed-tag">↗ FIXED CAMERA</span></div>
+<div id="countdown" class="countdown" hidden></div>
+<div id="overlay" class="overlay" hidden><div class="result-card"><span class="eyebrow" id="result-tag">TIME TO REST</span><h2 id="result-title">잠깐 쉬어가요</h2><p id="result-copy"></p><button id="resume" class="primary">계속하기 <span>→</span></button><button id="back" class="text-button">맵·캐릭터 다시 고르기</button></div></div>
+<div id="load-error" class="overlay" hidden><div class="result-card"><h2>3D 화면을 열지 못했어요</h2><p>브라우저의 하드웨어 가속을 켜고 새로고침해 주세요.</p></div></div>
+</section>
+<aside><section class="pick-card"><div class="section-heading"><span class="step">01</span><h2>나의 동글이</h2><span class="tiny">6 FRIENDS</span></div><p class="card-copy">작은 팔다리, 커다란 승부욕.</p><div id="characters" class="characters"></div><div class="selected-note"><span id="selected-dot"></span><div><strong id="selected-name"></strong><p id="selected-description"></p></div><span class="you-label">YOU</span></div></section>
+<section class="play-card"><div class="section-heading"><span class="step">02</span><h2>경기장으로 출발!</h2></div><div class="match-details"><span>나 + AI 친구들 <b>6명</b></span><span>한 판은 가볍게 <b>90초</b></span></div><button id="start" class="primary">한 판 시작하기 <span>↗</span></button><p class="small-center">설치 없이, 부담 없이, 동글동글.</p></section>
+<section class="live-card" hidden id="live-card"><div class="section-heading"><span class="live-dot"></span><h2>경기장 현황</h2><strong id="timer">01:30</strong></div><div class="stats"><div><strong id="remaining">6<small> / 6</small></strong><span>남은 동글이</span></div><div><strong id="dash-status">준비!</strong><span>스페이스 돌진</span></div></div><div class="cooldown"><i id="cooldown-fill"></i></div><p id="match-tip">부딪히면 서로 밀려나요. 가장자리를 조심!</p></section>
+<div class="gentle-note"><span>✳</span><p>넘어져도 괜찮아.<br/>다시 동글동글하면 되니까.</p></div></aside></div>
+<section class="controls"><div class="control-intro"><span class="control-icon">⌘</span><div><strong>아주 쉬운 첫걸음</strong><small>살짝 움직여도 쭈우욱 미끄러져요.</small></div></div><div class="control"><span class="keys"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>움직이기 <small>W A S D도 가능</small></span></div><div class="control"><kbd class="space-key">SPACE</kbd><span>통! 밀어내기 <small>3초마다 한 번</small></span></div><div class="control"><kbd>ESC</kbd><span>잠깐 쉬기</span></div></section>
+<div class="touch-controls"><div class="dpad"><button data-key="ArrowUp" aria-label="위로">↑</button><button data-key="ArrowLeft" aria-label="왼쪽">←</button><button data-key="ArrowDown" aria-label="아래로">↓</button><button data-key="ArrowRight" aria-label="오른쪽">→</button></div><button data-key="Space" class="touch-dash">통!</button></div>
+<footer><span>작고 귀여운 빙판 소동.</span><span>MADE FOR A LITTLE HAPPY BREAK <span class="footer-flower">✳</span></span></footer>
+</main>
+<dialog id="help-dialog"><button id="close-help" class="close-help" aria-label="닫기">×</button><p class="eyebrow">HOW TO PLAY</p><h2>동글동글 경기 규칙</h2><p>방향키 또는 WASD로 움직이고, 스페이스바로 이동 방향을 향해 돌진해요. 멈춰 있어도 관성이 남으니 가장자리에서는 반대 방향으로 브레이크!</p><p>AI 친구 5마리를 발판 밖으로 밀어내고 마지막까지 남으면 승리해요. 마지막 30초에는 발판이 조금씩 작아져요. 제한 시간이 끝나면 남은 친구들과 무승부예요.</p><p>ESC로 일시정지할 수 있어요. 다른 창으로 이동해도 자동으로 멈춰요. 카메라는 항상 고정되어 있어요.</p><button id="got-it" class="primary">좋아, 준비됐어! <span>→</span></button></dialog>
+</div></body></html>
