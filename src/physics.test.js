@@ -6,6 +6,14 @@ import { maps, createMap, disposeMap } from './maps.js';
 const egg = (values = {}) => ({ x:0,z:0,vx:0,vz:0,dx:1,dz:0,alive:true,
   cooldown:0,dashTime:0,impact:0,stagger:0,...values });
 
+test('player can brake after a hit while opponents retain satisfying knockback',()=>{
+ const player=egg({playerControlled:true,x:1}),bot=egg({x:1});
+ collide(egg({vx:6,power:.82}),player);collide(egg({vx:6,power:.82}),bot);
+ assert.ok(player.vx<bot.vx);
+ for(let i=0;i<24;i++){moveActor(player,-1,0,8,1/120);moveActor(bot,-1,0,8,1/120);}
+ assert.ok(player.x<bot.x);assert.ok(player.vx<bot.vx);
+});
+
 test('a normal hit slides a resisting opponent farther than the original physics', () => {
   const a=egg({vx:4}), b=egg({x:1});
   collide(a,b);

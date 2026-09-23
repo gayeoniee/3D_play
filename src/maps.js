@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 
 export const maps = [
-  { id:'ice', name:'넓은 얼음섬', icon:'❄', radius:7.4, drag:1.05, bounce:1,
+  { id:'ice', name:'넓은 얼음섬', icon:'❄', radius:8.5, drag:1.05, bounce:1,
     description:'넉넉해진 빙판에서 쭈우욱!', feel:'미끄러움 높음 · 넓은 경기장',
     background:'#dcebe5', ground:'#c5e0da', top:'#dfefee', side:'#9bc8d0', edge:'#f5fff6' },
-  { id:'kiln', name:'말랑 불가마', icon:'♨', radius:6.8, drag:1.4, bounce:1.18,
+  { id:'kiln', name:'말랑 불가마', icon:'♨', radius:7.8, drag:1.4, bounce:1.08,
     description:'따끈한 돌판 위에서 통통!', feel:'반동 강함 · 용암 밖으로 조심',
     background:'#f4ddc9', ground:'#df9168', top:'#ae8270', side:'#78625d', edge:'#f4bc77' },
-  { id:'forest', name:'도토리 숲', icon:'♧', radius:7.2, drag:1.9, bounce:1,
+  { id:'forest', name:'도토리 숲', icon:'♧', radius:8.2, drag:1.9, bounce:1,
     description:'폭신한 이끼가 덮인 숲속 무대', feel:'미끄러움 낮음 · 쉬운 방향 전환',
     background:'#e1e8c9', ground:'#c1ce9f', top:'#adc581', side:'#a18460', edge:'#d3dfa0' },
 ];

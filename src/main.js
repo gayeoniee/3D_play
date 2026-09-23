@@ -153,8 +153,8 @@ function resetActors(){
  effects.reset();rankSignature='';calloutTime=0;$('skill-callout').hidden=true;$('spectator').hidden=true;
  const opponents=friends.map((_,i)=>i).filter(i=>i!==selected);
  for(let i=opponents.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opponents[i],opponents[j]]=[opponents[j],opponents[i]];}
- actors=[selected,...opponents.slice(0,5)].map((i,slot)=>{const f=friends[i],angle=slot*Math.PI/3+Math.PI/2;const x=Math.cos(angle)*radius*.6,z=Math.sin(angle)*radius*.6;const mesh=makeEgg(i);if(i===selected)dressEgg(mesh,village?.outfit(i)||'none');scene.add(mesh);mesh.position.set(x,.1,z);
- return {index:i,mesh,x,z,vx:0,vz:0,power:f.power/100,moveSpeed:f.speed/100,weight:f.weight/100,alive:true,rank:null,eliminatedAt:null,fall:0,cooldown:0,dashTime:0,impact:0,stagger:0,shield:0,haste:0,whirl:0,slow:0,echo:0,skillTime:0,dx:0,dz:-1,aiTime:0,target:null};});
+ actors=[selected,...opponents.slice(0,5)].map((i,slot)=>{const f=friends[i],angle=slot*Math.PI/3+Math.PI/2;const x=Math.cos(angle)*radius*.45,z=Math.sin(angle)*radius*.45;const mesh=makeEgg(i);if(i===selected)dressEgg(mesh,village?.outfit(i)||'none');scene.add(mesh);mesh.position.set(x,.1,z);
+ return {index:i,mesh,x,z,vx:0,vz:0,playerControlled:i===selected,power:f.power/100*(i===selected?1:.82),moveSpeed:f.speed/100,weight:f.weight/100,alive:true,rank:null,eliminatedAt:null,fall:0,cooldown:0,dashTime:0,impact:0,stagger:0,shield:0,haste:0,whirl:0,slow:0,echo:0,skillTime:0,dx:0,dz:-1,aiTime:0,target:null};});
  marker.visible=true;updateMarker();updateSelection();
 }
 function updateMarker(){const p=getPlayer();if(!p)return;marker.visible=p.alive;marker.position.set(p.x,.12,p.z);const aim=marker.userData.aim;aim.position.set(p.dx*.95,.035,p.dz*.95);aim.rotation.y=Math.atan2(p.dx,p.dz);}
@@ -226,7 +226,7 @@ function updateHud(){
 }
 function step(dt){
  effects.update(dt);if(calloutTime>0){calloutTime=Math.max(0,calloutTime-dt);if(calloutTime===0)$('skill-callout').hidden=true;}
- elapsed+=dt;radius=currentMap().radius-Math.max(0,elapsed-60)*.11;ice.scale.set(radius/currentMap().radius,1,radius/currentMap().radius);
+ elapsed+=dt;radius=currentMap().radius-Math.max(0,elapsed-60)*.075;ice.scale.set(radius/currentMap().radius,1,radius/currentMap().radius);
  for(const a of actors){
  if(!a.alive){a.fall+=dt;a.mesh.position.y=.1-4*a.fall*a.fall;a.mesh.rotation.z=a.fall*1.6;a.mesh.visible=a.fall<1.2;continue;}
  tickSkill(a,actors,dt);
@@ -241,8 +241,8 @@ function step(dt){
  else if(target){ix=target.x-a.x-a.vx*.22;iz=target.z-a.z-a.vz*.22;}
  }
  const length=Math.hypot(ix,iz);if(length>0){a.dx=ix/length;a.dz=iz/length;const strength=a.index===selected?Math.max(1,length):length;ix/=strength;iz/=strength;}
- if(a.index!==selected&&a.target?.alive&&Math.hypot(a.target.x-a.x,a.target.z-a.z)<(skills[a.index].kind===5?3.4:2.6)&&a.cooldown===0&&Math.random()<dt*1.2)dash(a);
- const accel=a.index===selected?8:6.1;
+ if(a.index!==selected&&elapsed>4&&a.target?.alive&&Math.hypot(a.target.x-a.x,a.target.z-a.z)<(skills[a.index].kind===5?3.4:2.6)&&a.cooldown===0&&Math.random()<dt*.55)dash(a);
+ const accel=a.index===selected?8:4.8;
  moveActor(a,ix,iz,accel,dt,currentMap().drag);
  }
  for(let i=0;i<actors.length;i++)for(let j=i+1;j<actors.length;j++){

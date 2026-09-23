@@ -1,6 +1,6 @@
 // World units / seconds. Knockback temporarily reduces steering and ice drag.
 export function applyImpulse(a,x,z){
-  const resistance=(a.shield>0?(a.shieldFactor??.25):1)/(a.weight||1);
+  const resistance=(a.shield>0?(a.shieldFactor??.25):1)/(a.weight||1)*(a.playerControlled?.9:1);
   a.vx+=x*resistance;a.vz+=z*resistance;
 }
 export function launchDash(a) {
@@ -15,8 +15,8 @@ export function launchDash(a) {
 export function moveActor(a, ix, iz, acceleration, dt, surfaceDrag = 1.15) {
   a.impact = Math.max(0, a.impact - dt);
   a.stagger = Math.max(0, a.stagger - dt);
-  const control = (a.stagger > 0 ? .22 : a.haste>0 ? 1.6 : 1)*(a.moveSpeed||1)*(a.slow>0?.5:1);
-  const drag = a.stagger > 0 ? .55 : a.dashTime > 0 ? .8 : surfaceDrag;
+  const control = (a.stagger > 0 ? a.playerControlled?.6:.22 : a.haste>0 ? 1.6 : 1)*(a.moveSpeed||1)*(a.slow>0?.5:1);
+  const drag = a.stagger > 0 ? a.playerControlled?Math.max(.9,surfaceDrag*.8):.55 : a.dashTime > 0 ? .8 : surfaceDrag;
   const decay = Math.exp(-drag * dt);
   a.vx = (a.vx + ix * acceleration * control * dt) * decay;
   a.vz = (a.vz + iz * acceleration * control * dt) * decay;
