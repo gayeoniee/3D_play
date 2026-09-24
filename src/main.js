@@ -5,6 +5,7 @@ import './village.css';
 import './village-updates.css';
 import './cozy.css';
 import './village-home.css';
+import './exploration.css';
 import { dressEgg } from './cosmetics.js';
 import { createSound } from './sound.js';
 import { moveActor, collide } from './physics.js';
@@ -321,6 +322,6 @@ if(import.meta.env.DEV&&new URLSearchParams(location.search).has('test')){
  snapshot:()=>({view,selected,village:village.snapshot(),mode,elapsed,radius,camera:camera.position.toArray(),sound:sound.enabled,contextLost,render:{triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,pixelRatio:renderer.getPixelRatio()},actors:actors.map(({index,x,z,vx,vz,alive,rank,cooldown,shield,haste,whirl,impact,mesh})=>({index,x,z,vx,vz,alive,rank,cooldown,shield,haste,whirl,impact,outfit:mesh.userData.outfit,scale:mesh.userData.body.scale.toArray()})),joystick:{...mobile.vector}}),
  arrange:items=>items.forEach(({index,...values})=>Object.assign(actors.find(a=>a.index===index),values)),
  advance:seconds=>{for(let t=0;t<seconds&&mode==='playing';t+=1/120)step(1/120);},
- advanceVillage:seconds=>{for(let t=0;t<seconds;t+=.1)village.update(.1);},
+ advanceVillage:seconds=>{for(let t=0;t<seconds;t+=.05)village.update(Math.min(.05,seconds-t));},
  };
 }

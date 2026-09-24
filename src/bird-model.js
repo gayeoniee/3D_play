@@ -17,6 +17,27 @@ export function setBirdForm(root,species,stage){
  const headY=long?1.95:1.22,leg=long?.54:.17;
  function ball(parent,c,x,y,z,sx,sy,sz){const m=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshStandardMaterial({color:c,roughness:.78}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);return m;}
  function feather(parent,c,x,y,z,sx,sy,sz,angle=0){const m=ball(parent,c,x,y,z,sx,sy,sz);m.rotation.z=angle;return m;}
+ if(penguin){
+   // A plush silhouette: one round tummy, a big hooded face, tiny feet and flippers.
+   const hood=type==='emperor'?'#8baebb':adult?'#8198aa':'#a8bdc9';
+   ball(group,hood,0,.63,0,.54,.56,.43);
+   ball(group,'#fff8e9',0,.58,.3,.405,.405,.18);
+   ball(group,hood,0,1.09,.035,.49,.435,.42);
+   for(const s of [-1,1]){
+     ball(group,'#fffaf0',s*.17,1.055,.335,.24,.27,.13);
+     ball(group,'#344551',s*.17,1.1,.46,.055,.073,.029);
+     ball(group,'#ffffff',s*.17-.016,1.128,.481,.018,.021,.009);
+     ball(group,'#efb1b1',s*.285,.967,.419,.081,.035,.025);
+     ball(group,'#edbd79',s*.195,.095,.15,.12,.075,.16);
+     const wing=new THREE.Group();wing.position.set(s*.46,.78,-.015);group.add(wing);root.userData.wings.push(wing);
+     feather(wing,hood,s*.065,-.14,.015,.105,.25,.1,-s*.15);
+     if(type==='emperor'&&adult)ball(group,'#f3d293',s*.33,.84,.26,.065,.095,.04);
+   }
+   ball(group,'#e9b76b',0,.987,.49,.092,.05,.083);
+   ball(group,hood,0,.36,-.38,.14,.13,.17);
+   if(!adult)group.scale.setScalar(.88);
+   return;
+ }
  ball(group,penguin&&adult?'#536576':color,0,leg+.6,0,adult?.49:.43,adult?.65:.49,.38);
  ball(group,penguin?'#fff3d9':'#fff0c7',0,leg+.61,.29,.31,.4,.13);
  if(long)ball(group,color,0,1.42,.02,.13,.5,.14);

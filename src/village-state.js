@@ -1,8 +1,9 @@
 import { eggs,rollEgg,DRAW_COST,DUPLICATE_REFUND } from './eggs.js';
 import { restoreFlock } from './evolution.js';
+import {readExploration} from './exploration-state.js';
 const KEY='eggy-village-v1';
 const validRecord=text=>{try{const d=JSON.parse(text);return d&&typeof d==='object'&&(d.flock===undefined||(Array.isArray(d.flock)&&d.flock.length>0&&d.flock.every(b=>Number.isInteger(b?.species)&&b.species>=0&&b.species<18&&Number.isInteger(b.stage)&&b.stage>=0&&b.stage<=2)))&&((Array.isArray(d.owned)&&d.owned.some(i=>Number.isInteger(i)&&i>=0&&i<18))||(Number.isInteger(d.favorite)&&d.favorite>=0&&d.favorite<18));}catch{return false;}};
-export const freshVillage=(random=Math.random)=>{const starter=Math.floor(random()*6);return restoreFlock({favorite:starter,owned:[starter],shards:300,tickets:0,layout:{},nicknames:Array(18).fill(''),fragments:Array(18).fill(0),outfits:Array(18).fill('none'),daily:{day:localDay(),completed:0,claimed:false},draws:0,garden:'peach',hearts:Array(18).fill(0),greeted:Array(18).fill(''),matches:0,wins:0});};
+export const freshVillage=(random=Math.random)=>{const starter=Math.floor(random()*6);return restoreFlock({favorite:starter,owned:[starter],shards:300,tickets:0,layout:{},nicknames:Array(18).fill(''),fragments:Array(18).fill(0),outfits:Array(18).fill('none'),daily:{day:localDay(),completed:0,claimed:false},exploration:readExploration(),draws:0,garden:'peach',hearts:Array(18).fill(0),greeted:Array(18).fill(''),matches:0,wins:0});};
 export const cleanName=value=>typeof value==='string'?Array.from(value.replace(/[\u0000-\u001f\u007f<>]/g,'').trim()).slice(0,12).join(''):'';
 export const outfitCost={none:0,ribbon:1,hat:3,garden:5};
 export function equipOutfit(data,id,outfit){if(!data.owned.includes(id)||!Object.hasOwn(outfitCost,outfit)||(data.fragments[id]||0)<outfitCost[outfit])return false;data.outfits[id]=outfit;return true;}
@@ -25,7 +26,7 @@ export function readVillage(storage){
       daily:{day:/^\d{4}-\d{2}-\d{2}$/.test(data.daily?.day)?data.daily.day:localDay(),completed:Math.min(3,count(data.daily?.completed)),claimed:data.daily?.claimed===true&&count(data.daily?.completed)>=3},
       hearts:initial.hearts.map((_,i)=>count(data.hearts?.[i])),
       greeted:initial.greeted.map((_,i)=>typeof data.greeted?.[i]==='string'?data.greeted[i].slice(0,10):''),
-      matches:count(data.matches),wins:Math.min(count(data.wins),count(data.matches))};
+      exploration:readExploration(data.exploration),matches:count(data.matches),wins:Math.min(count(data.wins),count(data.matches))};
     restoreFlock(restored,data);if(!validRecord(raw))Object.defineProperty(restored,'recovered',{value:true});return restored;
   }catch{return initial;}
 }

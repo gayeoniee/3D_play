@@ -19,13 +19,14 @@ export function createVillageLife({residents,root,data,container,reduced,project
   if(r.route.length&&!navigation.clear(r.mesh.position)){r.mesh.position.x=r.route[0].x;r.mesh.position.z=r.route[0].z;}
   r.waypoint=1;
  }
- return {update(dt,editing,selected,speaking=false){
+ return {update(dt,editing,selected,speaking=false,controlled=-1){
   clock+=dt;
   if(!editing&&!reduced&&(!navigation||wasEditing)){navigation=createNavigation(villageObstacles(props()));residents.forEach(r=>r.next=0);}
   if(wasEditing&&!editing)residents.forEach(r=>r.next=0);wasEditing=editing;
   residents.forEach((r,i)=>{
    if(!bubbles[i]){const e=document.createElement('span');e.className='resident-thought';container.append(e);bubbles[i]=e;r.activity='산책 중';}
    const mesh=r.mesh,body=mesh.userData.body,a=anchor(r);bubbles[i].hidden=true;if(!mesh.visible)return;
+   if(i===controlled){r.next=0;return;}
    if(editing||reduced){mesh.position.x=a.x;mesh.position.z=a.z;r.next=0;body.rotation.set(0,0,0);body.position.y=0;mesh.userData.arms[1].rotation.z=.4;mesh.userData.feet.forEach(f=>f.position.y=.14);mesh.userData.eyes?.forEach(({eye,shine})=>{eye.scale.y=.065;shine.visible=true;});return;}
    r.next=(r.next||0)-dt;if(r.next<=0){choose(r);r.next=11+(i%7)*.55;}
    let goal=r.route[r.waypoint];if(goal&&Math.hypot(goal.x-mesh.position.x,goal.z-mesh.position.z)<.06)goal=r.route[++r.waypoint];

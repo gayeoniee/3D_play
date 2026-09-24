@@ -12,11 +12,12 @@ import { createVillageHome } from './village-home.js';
 import {restoreFlock,formName} from './evolution.js';
 import {setBirdForm,flapBird} from './bird-model.js';
 import {createEvolutionUI} from './evolution-ui.js';
+import {createExploration} from './exploration.js';
 
 export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=()=>{},reduced,shadowSize=2048}){
   const $=id=>document.getElementById(id);
   let storage;try{storage=localStorage;}catch{storage=null;}
-  const data=restoreFlock(readVillage(storage));let selected=data.favorite,time=0,greeting=0,active=true,tools,evolution;
+  const data=restoreFlock(readVillage(storage));let selected=data.favorite,time=0,greeting=0,active=true,tools,evolution,exploration;
   storage=createStorageSession(storage,()=>{onExternalChange();tools?.conflict();});
   let shownDay=localDay();
   const scene=new THREE.Scene();scene.background=new THREE.Color('#e7eee0');
@@ -137,7 +138,7 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     let object=hit.object;while(object&&object.userData.resident===undefined&&object.userData.homeSlot===undefined&&!object.userData.arena)object=object.parent;
     return object?.userData||null;
   }
-  $('village-scene').addEventListener('click',e=>{if(!active||editor.editing)return;const hit=pick(e);if(hit?.arena)onPlay(selected);else if(hit?.resident!==undefined)selectBird(hit.resident);else if(hit?.homeSlot!==undefined)select(data.owned[hit.homeSlot%data.owned.length]);});
+  $('village-scene').addEventListener('click',e=>{if(!active||editor.editing||exploration?.active)return;const hit=pick(e);if(hit?.arena)onPlay(selected);else if(hit?.resident!==undefined)selectBird(hit.resident);else if(hit?.homeSlot!==undefined)select(data.owned[hit.homeSlot%data.owned.length]);});
   $('village-scene').addEventListener('pointermove',e=>{if(active&&!editor.editing)$('village-scene').style.cursor=pick(e)?'pointer':'default';});
   const residentButtons=friends.map((f,i)=>{
     const button=document.createElement('button');button.className='resident-button';button.type='button';button.setAttribute('aria-label',f.name+' 만나기');
@@ -182,18 +183,19 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     hatch.show(result);
   });
   function project(object,element,offset=0){
-    const point=object.position.clone();point.y+=offset;point.project(camera);
+    const point=object.position.clone();point.y+=offset;point.project(exploration?.active?exploration.camera:camera);
     const box=$('village-scene').getBoundingClientRect();element.style.left=(point.x*.5+.5)*box.width+'px';element.style.top=(-point.y*.5+.5)*box.height+'px';
   }
   tools=createVillageTools({data,storage,friends,selected:()=>selected,refresh,persist});
   evolution=createEvolutionUI({data,friends,selectBird,refresh,persist});
   let nearView=false;
-  function resizeVillage(width,height){const aspect=width/height,halfW=Math.max(11,8.8*aspect)*(nearView&&!editor.editing?0.72:1);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();}
-  const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);}});
+  function resizeVillage(width,height){exploration?.resize(width,height);const aspect=width/height,halfW=Math.max(11,8.8*aspect)*(nearView&&!editor.editing?0.72:1);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();}
+  exploration=createExploration({scene,root,residents,data,container:$('village-scene'),reduced,persist,refresh,onExit:()=>life.reset()});
+  const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);},onExplore:()=>{editor.stop();home.close();$('village-bubble').hidden=true;greeting=0;exploration.start();}});
   $('village-edit').addEventListener('click',()=>{const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);});
-  $('village-scene').addEventListener('click',e=>{if(!active||editor.editing)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});
+  $('village-scene').addEventListener('click',e=>{if(!active||editor.editing||exploration.active)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});
   garden(data.garden);
-  return {scene,camera,select,
+  return {scene,get camera(){return exploration.active?exploration.camera:camera;},select,
     get selected(){return selected;},
     owns:index=>data.owned.includes(index),
     outfit:index=>data.outfits[index],
@@ -201,17 +203,18 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     name:index=>data.nicknames[index]||friends[index].name,
     get owned(){return [...data.owned];},
     recordMatch(rank){const tickets=data.tickets,beforeDay=data.daily.day,beforeClaim=data.daily.claimed,reward=awardMatch(data,rank);persist();refresh();return {shards:reward,tickets:data.tickets-tickets,daily:data.daily.claimed&&(!beforeClaim||beforeDay!==data.daily.day),victory:rank===1&&data.wins%3===0};},
-    setActive(value){active=value;if(!value){editor.stop();home.close();}if(value)refresh();},
+    setActive(value){active=value;if(!value){exploration.stop();editor.stop();home.close();}if(value)refresh();},
     resize:resizeVillage,
     update(dt){
       time+=dt;
-      life.update(dt,editor.editing,data.favoriteBird,greeting>0);
+      life.update(dt,editor.editing,data.favoriteBird,greeting>0,exploration.active?data.favoriteBird:-1);
+      exploration.update(dt);
       residents.forEach(r=>{flapBird(r.mesh,time+r.index,reduced);const a=data.layout['bird-'+r.index]||r;r.charm.position.set(a.x+.65,.14,a.z+.45);});
       if(Math.floor(time)!==Math.floor(time-dt)){if(shownDay!==localDay()){shownDay=localDay();refresh();}tools.activity(editor.editing?'마을 꾸미는 중':life.status(data.favoriteBird));tools.refresh();}
       editor.update();$('village-arena-link').hidden=editor.editing;
       halo.position.set(residents[data.favoriteBird].mesh.position.x,.14,residents[data.favoriteBird].mesh.position.z);
       if(greeting>0){greeting=Math.max(0,greeting-dt);project(residents[data.favoriteBird].mesh,$('village-bubble'),1.8);if(greeting===0)$('village-bubble').hidden=true;}
     },
-    snapshot:()=>({selected,owned:[...data.owned],shards:data.shards,tickets:data.tickets,daily:{...data.daily},nicknames:[...data.nicknames],fragments:[...data.fragments],outfits:[...data.outfits],editing:editor.editing,placements:editor.snapshot(),garden:data.garden,hearts:[...data.hearts],matches:data.matches,wins:data.wins,camera:camera.position.toArray(),residents:residents.filter(r=>r.mesh.visible).map(r=>({id:r.index,x:r.mesh.position.x,z:r.mesh.position.z,activity:r.activity,walkable:life.clear(r.mesh.position),outfit:r.mesh.userData.outfit}))})
+    snapshot:()=>({selected,owned:[...data.owned],shards:data.shards,tickets:data.tickets,daily:{...data.daily},nicknames:[...data.nicknames],fragments:[...data.fragments],outfits:[...data.outfits],editing:editor.editing,placements:editor.snapshot(),garden:data.garden,hearts:[...data.hearts],matches:data.matches,wins:data.wins,camera:camera.position.toArray(),exploration:exploration.snapshot(),residents:residents.filter(r=>r.mesh.visible).map(r=>({id:r.index,x:r.mesh.position.x,z:r.mesh.position.z,activity:r.activity,walkable:life.clear(r.mesh.position),outfit:r.mesh.userData.outfit}))})
   };
 }
