@@ -67,7 +67,7 @@ test('greetings reward owned eggs once per day, and completed matches fund the n
  assert.equal(greetResident(data,0,'2026-09-22'),true);assert.equal(data.shards,320);
  assert.equal(greetResident(data,0,'2026-09-22'),false);assert.equal(data.shards,320);
  assert.equal(greetResident(data,0,'2026-09-23'),true);assert.equal(data.hearts[0],2);
- assert.equal(awardMatch(data,1),120);assert.equal(awardMatch(data,6),70);assert.equal(awardMatch(data,7),0);assert.equal(data.matches,2);assert.equal(data.wins,1);
+ assert.equal(awardMatch(data,1),150);assert.equal(awardMatch(data,6),20);assert.equal(awardMatch(data,7),0);assert.equal(data.matches,2);assert.equal(data.wins,1);
 });
 test('all 18 skills activate and expire without invalid velocity or status',()=>{
  for(const egg of eggs){

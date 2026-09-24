@@ -1,0 +1,5 @@
+.skip-spectating{position:absolute;top:122px;left:50%;transform:translateX(-50%);z-index:4;border:1px solid #fff;border-radius:18px;min-height:44px;padding:11px 20px;background:#58795a;color:#fffbed;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 4px 16px #314b3022}
+.skip-spectating:active:not(:disabled){transform:translateX(-50%) translateY(2px)}
+.match-rewards{margin-top:17px;color:#788565;font-size:10px}.match-rewards>strong{font-size:11px}.match-rewards>div{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.match-rewards span{background:#f0f3e6;border-radius:9px;padding:7px;text-align:center}.match-rewards b{display:block;margin-top:4px;font-size:12px;color:#ad8e49}.match-rewards small{display:block;font-size:9px;line-height:1.8;color:#8f9a82}
+@media(max-width:720px){.skip-spectating{top:108px;font-size:11px}}
+body.mobile-match .skip-spectating{top:102px;font-size:11px;min-height:42px;padding:9px 16px}

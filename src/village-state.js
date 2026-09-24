@@ -1,6 +1,7 @@
 import { eggs,rollEgg,DRAW_COST,DUPLICATE_REFUND } from './eggs.js';
 import { restoreFlock } from './evolution.js';
 import {readExploration} from './exploration-state.js';
+import {rewardForRank} from './match-rewards.js';
 const KEY='eggy-village-v1';
 const validRecord=text=>{try{const d=JSON.parse(text);return d&&typeof d==='object'&&(d.flock===undefined||(Array.isArray(d.flock)&&d.flock.length>0&&d.flock.every(b=>Number.isInteger(b?.species)&&b.species>=0&&b.species<18&&Number.isInteger(b.stage)&&b.stage>=0&&b.stage<=2)))&&((Array.isArray(d.owned)&&d.owned.some(i=>Number.isInteger(i)&&i>=0&&i<18))||(Number.isInteger(d.favorite)&&d.favorite>=0&&d.favorite<18));}catch{return false;}};
 export const freshVillage=(random=Math.random)=>{const starter=Math.floor(random()*6);return restoreFlock({favorite:starter,owned:[starter],shards:300,tickets:0,layout:{},nicknames:Array(18).fill(''),fragments:Array(18).fill(0),outfits:Array(18).fill('none'),daily:{day:localDay(),completed:0,claimed:false},exploration:readExploration(),draws:0,garden:'peach',hearts:Array(18).fill(0),greeted:Array(18).fill(''),matches:0,wins:0});};
@@ -51,7 +52,7 @@ export function drawEgg(data,random=Math.random){
 export function dailyProgress(data,day=localDay()){return data.daily.day===day?data.daily:{day,completed:0,claimed:false};}
 export function awardMatch(data,rank,day=localDay()){
  if(!Number.isInteger(rank)||rank<1||rank>6)return 0;
- const reward=60+(7-rank)*10;data.matches++;if(rank===1){data.wins++;if(data.wins%3===0)data.tickets=(data.tickets||0)+1;}data.shards+=reward;
+ const reward=rewardForRank(rank);data.matches++;if(rank===1){data.wins++;if(data.wins%3===0)data.tickets=(data.tickets||0)+1;}data.shards+=reward;
  data.daily={...dailyProgress(data,day)};data.daily.completed=Math.min(3,data.daily.completed+1);
  if(data.daily.completed===3&&!data.daily.claimed){data.daily.claimed=true;data.tickets++;}return reward;
 }

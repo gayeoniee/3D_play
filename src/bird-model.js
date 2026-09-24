@@ -2,70 +2,59 @@ import * as THREE from 'three';
 import {birdKinds} from './evolution.js';
 import {eggs} from './eggs.js';
 
+// A soft, compact silhouette for every species; small accents identify the bird.
 export function setBirdForm(root,species,stage){
  if(root.userData.birdStage===stage)return;
  root.userData.birdStage=stage;
  const body=root.userData.body,old=root.userData.bird;
- if(old){old.removeFromParent();old.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});}
+ if(old){old.removeFromParent();const geometry=new Set(),materials=new Set();old.traverse(o=>{if(o.geometry)geometry.add(o.geometry);if(o.material)materials.add(o.material);});geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}
  body.children.forEach(o=>{if(o!==root.userData.dress)o.visible=stage===0;});
- root.userData.wings=[];if(!stage)return;
+ root.userData.wings=[];root.userData.bird=null;if(!stage)return;
  const group=new THREE.Group();body.add(group);root.userData.bird=group;
- const type=birdKinds[species][2],adult=stage===2,color=eggs[species].color;
+ const type=birdKinds[species][2],adult=stage===2,penguin=['penguin','emperor'].includes(type),owl=['owl','snowowl'].includes(type);
  root.userData.birdType=type;
- const long=adult&&['ostrich','flamingo','crane','swan'].includes(type);
- const penguin=['penguin','emperor'].includes(type),owl=['owl','snowowl'].includes(type);
- const headY=long?1.95:1.22,leg=long?.54:.17;
- function ball(parent,c,x,y,z,sx,sy,sz){const m=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshStandardMaterial({color:c,roughness:.78}));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);return m;}
- function feather(parent,c,x,y,z,sx,sy,sz,angle=0){const m=ball(parent,c,x,y,z,sx,sy,sz);m.rotation.z=angle;return m;}
- if(penguin){
-   // A plush silhouette: one round tummy, a big hooded face, tiny feet and flippers.
-   const hood=type==='emperor'?'#8baebb':adult?'#8198aa':'#a8bdc9';
-   ball(group,hood,0,.63,0,.54,.56,.43);
-   ball(group,'#fff8e9',0,.58,.3,.405,.405,.18);
-   ball(group,hood,0,1.09,.035,.49,.435,.42);
-   for(const s of [-1,1]){
-     ball(group,'#fffaf0',s*.17,1.055,.335,.24,.27,.13);
-     ball(group,'#344551',s*.17,1.1,.46,.055,.073,.029);
-     ball(group,'#ffffff',s*.17-.016,1.128,.481,.018,.021,.009);
-     ball(group,'#efb1b1',s*.285,.967,.419,.081,.035,.025);
-     ball(group,'#edbd79',s*.195,.095,.15,.12,.075,.16);
-     const wing=new THREE.Group();wing.position.set(s*.46,.78,-.015);group.add(wing);root.userData.wings.push(wing);
-     feather(wing,hood,s*.065,-.14,.015,.105,.25,.1,-s*.15);
-     if(type==='emperor'&&adult)ball(group,'#f3d293',s*.33,.84,.26,.065,.095,.04);
-   }
-   ball(group,'#e9b76b',0,.987,.49,.092,.05,.083);
-   ball(group,hood,0,.36,-.38,.14,.13,.17);
-   if(!adult)group.scale.setScalar(.88);
-   return;
+ const shell=new THREE.Color(eggs[species].color).lerp(new THREE.Color('#fff2da'),.1);
+ const color=penguin?(type==='emperor'?'#a0becb':'#a9bdca'):shell;
+ const accent=new THREE.Color(eggs[species].color).multiplyScalar(.9),cream='#fff7e6',pink='#efb2b4',gold='#e9bb79';
+ const geometry=new THREE.SphereGeometry(1,24,18),materials=new Map();
+ function ball(parent,c,x,y,z,sx,sy,sz,tilt=0){const key=c instanceof THREE.Color?c.getHexString():c;if(!materials.has(key))materials.set(key,new THREE.MeshStandardMaterial({color:c,roughness:.82}));const mesh=new THREE.Mesh(geometry,materials.get(key));mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);mesh.rotation.z=tilt;mesh.castShadow=true;parent.add(mesh);return mesh;}
+ ball(group,color,0,.69,0,.56,.64,.46);
+ ball(group,color,0,1.03,.015,.54,.46,.45);
+ ball(group,cream,0,.53,.315,.39,.35,.17);
+ if(penguin||owl){for(const side of [-1,1])ball(group,cream,side*.185,.97,.37,.245,.265,.14);}
+ else ball(group,new THREE.Color(cream).lerp(shell,.24),0,.96,.365,.40,.285,.13);
+ const eyeGap=owl?.19:.165;
+ for(const side of [-1,1]){
+  ball(group,'#3c4a4a',side*eyeGap,1.015,.493,.061,.074,.029);
+  ball(group,'#ffffff',side*eyeGap-.017,1.043,.516,.02,.021,.008);
+  ball(group,pink,side*.285,.895,.438,.09,.041,.022);
+  ball(group,gold,side*.185,.087,.12,.125,.065,.155);
+  const wing=new THREE.Group();wing.position.set(side*.48,.76,-.015);group.add(wing);root.userData.wings.push(wing);
+  ball(wing,color,side*.065,-.12,.015,.135,adult?.245:.195,.11,-side*.17);
+  if(adult&&!penguin)ball(wing,cream,side*.078,-.21,.079,.074,.07,.038,-side*.15);
  }
- ball(group,penguin&&adult?'#536576':color,0,leg+.6,0,adult?.49:.43,adult?.65:.49,.38);
- ball(group,penguin?'#fff3d9':'#fff0c7',0,leg+.61,.29,.31,.4,.13);
- if(long)ball(group,color,0,1.42,.02,.13,.5,.14);
- ball(group,color,0,headY,.08,owl?.49:.37,owl?.42:.36,.33);
- for(const s of [-1,1]){
-   ball(group,'#3f4e48',s*.14,headY+.04,.382,.038,.052,.03);
-   ball(group,'#ffffff',s*.14-.009,headY+.06,.404,.011,.013,.01);
-   ball(group,'#edb0a0',s*.24,headY-.09,.34,.065,.034,.018);
-   if(long)ball(group,'#d7a45c',s*.18,.35,.02,.046,.34,.05);
-   ball(group,'#e5af59',s*.18,.09,.14,.13,.07,.21);
-   const wing=new THREE.Group();wing.position.set(s*.39,leg+.89,-.02);group.add(wing);root.userData.wings.push(wing);
-   const length=penguin?.36:adult?(['phoenix','eagle','paradise'].includes(type)?.7:.53):.25;
-   feather(wing,color,s*.14,-length*.45,0,.16,length,.12,-s*.28);
-   if(adult&&!penguin)for(let j=0;j<3;j++)feather(wing,j%2?'#f5dfb0':color,s*(.14+j*.05),-length*.8-j*.055,-.03,.065,.23,.075,-s*.25);
+ const wide=['duck','swan'].includes(type),long=['kiwi','hummingbird'].includes(type);
+ ball(group,gold,0,.919,.507,wide?.115:.087,.048,long?.13:.085);
+ ball(group,accent,0,.35,-.405,.17,.14,.18);
+ const tuft=(c,x,y,z,sx,sy,tilt)=>ball(group,c,x,y,z,sx,sy,.085,tilt);
+ if(owl){for(const side of [-1,1])tuft(color,side*.35,1.35,-.02,.10,.14,-side*.3);}
+ else if(type==='chicken'){for(let i=-1;i<=1;i++)tuft('#efa7a0',i*.095,1.46-Math.abs(i)*.025,0,.083,.12,0);}
+ else if(['ostrich','kiwi','pigeon'].includes(type)){tuft(cream,-.045,1.47,0,.09,.12,-.45);tuft(color,.065,1.46,.015,.09,.11,.55);}
+ else if(['flamingo','crane','swan'].includes(type)){tuft(cream,-.045,1.45,.015,.10,.085,-.35);}
+ else if(penguin){if(type==='emperor'&&adult)for(const side of [-1,1])ball(group,'#f2d995',side*.37,.78,.28,.062,.082,.035);}
+ else {tuft(type==='phoenix'?'#f6cb88':cream,0,1.47,0,.10,.14,-.3);}
+ if(adult&&['peacock','phoenix','paradise'].includes(type)){
+  for(let i=-2;i<=2;i++){
+   const fanColor=type==='phoenix'?(i%2?'#f2b18b':'#f5d99f'):type==='peacock'?(i%2?'#b1cbbd':shell):shell;
+   ball(group,fanColor,i*.21,.88+(2-Math.abs(i))*.10,-.40,.17,.37,.065,-i*.3);
+   if(type!=='phoenix')ball(group,type==='peacock'?'#e4d4a3':'#f6dfad',i*.21,1.06+(2-Math.abs(i))*.10,-.47,.075,.085,.018,-i*.3);
+  }
  }
- const beak=new THREE.Mesh(new THREE.ConeGeometry(['duck','swan'].includes(type)?.14:.09,['kiwi','hummingbird'].includes(type)?.48:.22,8),new THREE.MeshStandardMaterial({color:'#e5ae55'}));
- beak.rotation.x=Math.PI/2;beak.position.set(0,headY-.06,.47);if(type==='duck')beak.scale.z=.45;group.add(beak);
- const plume=['peacock','phoenix','paradise'].includes(type)&&adult;
- if(plume){for(let i=-3;i<=3;i++){
-   const f=feather(group,type==='phoenix'?(i%2?'#ef9a52':'#f4cc65'):color,i*.16,1,-.43,.13,.72,.08,-i*.24);
-   if(type!=='phoenix')ball(f,type==='peacock'?'#73a99a':'#ffe6a0',0,.63,-.5,.5,.15,.4);
- }}else for(let i=-1;i<=1;i++)feather(group,color,i*.1,leg+.48,-.4,.1,adult?.38:.18,.07,i*.25);
- if(['chicken','parrot','phoenix','eagle','emperor'].includes(type))for(let i=-1;i<=1;i++)feather(group,type==='chicken'?'#e9957d':'#f4d884',i*.1,headY+.35,.04,.075,.15+(.04*(1-Math.abs(i))),.08,i*.2);
- if(owl)for(const s of [-1,1])feather(group,color,s*.31,headY+.29,.02,.1,.17,.08,-s*.5);
- if(!adult)group.scale.setScalar(.9);
+ if(adult&&type==='parrot')ball(group,'#e1d597',0,.40,-.49,.11,.24,.055,.15);
+ if(adult&&type==='eagle')for(const side of [-1,1])tuft(cream,side*.37,1.12,.34,.11,.045,side*.2);
+ if(!adult)group.scale.setScalar(.84);
 }
 export function flapBird(root,time,reduced=false){
- const wings=root.userData.wings||[];
- const type=root.userData.birdType,speed=type==='hummingbird'?15:['phoenix','eagle'].includes(type)?3.5:6,amplitude=['penguin','emperor'].includes(type)?.2:.38;
- wings.forEach((wing,i)=>{const side=i===0?-1:1;wing.rotation.z=side*(.2+(reduced?0:(Math.sin(time*speed)+1)*amplitude));wing.rotation.x=reduced?0:Math.sin(time*speed)*.1;});
+ const type=root.userData.birdType,speed=type==='hummingbird'?10:['phoenix','eagle'].includes(type)?3:4.5,amplitude=['penguin','emperor'].includes(type)?.13:.23;
+ (root.userData.wings||[]).forEach((wing,i)=>{const side=i===0?-1:1;wing.rotation.z=side*(.10+(reduced?0:(Math.sin(time*speed)+1)*amplitude));wing.rotation.x=reduced?0:Math.sin(time*speed)*.055;});
 }

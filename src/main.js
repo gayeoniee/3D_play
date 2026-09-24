@@ -6,6 +6,7 @@ import './village-updates.css';
 import './cozy.css';
 import './village-home.css';
 import './exploration.css';
+import './match-results.css';
 import { dressEgg } from './cosmetics.js';
 import { createSound } from './sound.js';
 import { moveActor, collide } from './physics.js';
@@ -17,9 +18,13 @@ import { createMobileControls } from './mobile.js';
 import { eggs as friends } from './eggs.js';
 import { createVillage } from './village.js';
 import {setBirdForm,flapBird} from './bird-model.js';
+import {matchRewards} from './match-rewards.js';
 const $ = (id) => document.getElementById(id);
 const escapeText=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sound=createSound();
+const rewardGuide=document.createElement('div');rewardGuide.className='match-rewards';rewardGuide.innerHTML='<strong>등수별 별조각</strong><div>'+matchRewards.map((n,i)=>'<span>'+(i+1)+'위 <b>✦ '+n+'</b></span>').join('')+'</div><small>공동 순위는 같은 보상 · 탈락 후 관전 건너뛰기도 정상 지급</small>';
+$('start').after(rewardGuide);
+document.querySelector('.draw-odds p').lastChild.textContent='경기 보상: '+matchRewards.map((n,i)=>(i+1)+'위 '+n+'개').join(' · ')+'. 탈락 후 관전 건너뛰기도 완료로 인정돼요. 하루 첫 인사는 20개! 유료 결제는 없어요.';
 
 let selected=0, mode='lobby', previousMode='playing', actors=[], elapsed=0, count=3, radius=maps[0].radius, ready=false;
 let renderer, scene, camera, ice, marker, mapRoot, effects;
@@ -28,6 +33,7 @@ let hudTimer=0,contextLost=false,villageVisible=true,villageFrameTime=0;
 const lowPower=navigator.maxTouchPoints>0||matchMedia('(pointer: coarse)').matches;
 const getPlayer=()=>actors.find(a=>a.index===selected);
 let calloutTime=0, rankSignature='';
+let skipping=false,skipGeneration=0;
 let mapIndex=0;
 const currentMap=()=>maps[mapIndex];
 const keys=new Set(), controls=new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space','Escape']);
@@ -151,6 +157,7 @@ function resize(){
 }
 function resetActors(){
  if(!ready)return;
+ skipping=false;skipGeneration++;$('skip-spectating').hidden=true;$('skip-spectating').disabled=false;$('skip-spectating').textContent='관전 건너뛰기 · 결과 보기 →';
  const geometries=new Set(),materials=new Set();actors.forEach(a=>{scene.remove(a.mesh);a.mesh.traverse(o=>{if(o.geometry&&!sharedGeometry.has(o.geometry))geometries.add(o.geometry);if(o.material)materials.add(o.material);});});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
  radius=currentMap().radius;ice.scale.set(1,1,1);
  effects.reset();rankSignature='';calloutTime=0;$('skill-callout').hidden=true;$('spectator').hidden=true;
@@ -185,11 +192,24 @@ function pause(){
 function resume(){if(document.querySelector('dialog[open]'))return;if(mode==='paused'){mode=previousMode;$('overlay').hidden=true;$('countdown').hidden=mode!=='countdown';$('phase').textContent=mode==='playing'?'동글 소동 진행 중':'준비, 동글!';}else if(mode==='ended')start();}
 function finish(title,copy){
  if(mode==='ended')return;
+ $('skip-spectating').hidden=true;
+ if(skipping)copy='관전을 건너뛰고 남은 경기를 계산했어요. '+copy;
  mobile.reset();
  completeRanks(actors);updateRankings();$('result-ranks').hidden=false;$('skill-button').disabled=true;$('skill-callout').hidden=true;$('spectator').hidden=true;
  const reward=village.recordMatch(getPlayer().rank);copy+=' 별조각 +'+reward.shards+'!'+(reward.victory?' 누적 3승 보상! 뽑기권 +1장!':'')+(reward.daily?' 오늘 3판 완료! 뽑기권 +1장!':'');if(getPlayer().rank===1)sound.win();
  mode='ended';keys.clear();$('overlay').hidden=false;$('result-tag').textContent='A LITTLE HAPPY ENDING';$('result-title').textContent=title;$('result-copy').textContent=copy;$('resume').innerHTML='한 판 더! <span>↗</span>';$('phase').textContent='경기 종료';$('pause').disabled=true;updateHud();
 }
+async function skipSpectating(){
+ if(skipping||mode!=='playing'||view!=='arena'||!getPlayer()||getPlayer().alive)return;
+ skipping=true;const generation=++skipGeneration;$('skip-spectating').disabled=true;$('skip-spectating').textContent='최종 순위 계산 중…';
+ try{
+  while(mode==='playing'&&generation===skipGeneration){
+   await new Promise(resolve=>setTimeout(resolve,0));
+   for(let i=0;i<480&&mode==='playing'&&generation===skipGeneration;i++)step(1/120);
+  }
+ }finally{if(generation===skipGeneration){skipping=false;$('skip-spectating').disabled=false;$('skip-spectating').textContent='관전 건너뛰기 · 결과 보기 →';}}
+}
+$('skip-spectating').addEventListener('click',skipSpectating);
 function dash(a){
  if(a.index===selected){
  const ix=Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
@@ -200,11 +220,12 @@ function dash(a){
  if(mode!=='playing'||!activateSkill(a,actors))return;
  const skill=skills[a.index];
  if(a.index===selected)sound.skill(skill.kind);
- effects.burst(a.x,a.z,skill.color,[1.3,1.8,2.8,1.1,2.5,2][skill.kind],a.dx,a.dz,skill.kind===5);
+ if(!skipping)effects.burst(a.x,a.z,skill.color,[1.3,1.8,2.8,1.1,2.5,2][skill.kind],a.dx,a.dz,skill.kind===5);
  if(a.index===selected){calloutTime=.85;$('skill-callout').textContent=skill.icon+' '+skill.name;$('skill-callout').style.color=skill.color;$('skill-callout').hidden=false;}
  if(a.index===selected)updateHud();
 }
 function showImpact(hit){
+ if(skipping)return;
  effects.burst(hit.x,hit.z,hit.color||(hit.dash?'#efbd56':'#cfa04e'),hit.dash?1.4:Math.min(1.15,.55+(hit.strength||1)*.06),hit.dx||0,hit.dz||0,true);
  if(hit.indices?.includes(selected))sound.hit(hit.strength);
 }
@@ -262,7 +283,7 @@ function step(dt){
  recordFalls(actors,fallen,elapsed);
  for(const a of fallen){
    effects.burst(a.x,a.z,friends[a.index].color,1.25);a.mesh.userData.aura.visible=false;a.mesh.userData.shield.visible=false;
-   if(a.index===selected){$('spectator').hidden=false;$('spectator').textContent='내 순위 '+a.rank+'위 · 남은 친구들을 관전 중';$('arena-hint').textContent='ESC로 쉬거나 다른 맵을 고를 수 있어요';}
+   if(a.index===selected){$('spectator').hidden=false;$('skip-spectating').hidden=false;$('spectator').textContent='내 순위 '+a.rank+'위 · 남은 친구들을 관전 중';$('arena-hint').textContent='관전을 건너뛰면 최종 순위와 보상을 바로 확인해요';}
  }
  for(const a of actors){
  if(!a.alive)continue;
@@ -280,7 +301,7 @@ function step(dt){
  const walk=reduced?0:Math.sin(elapsed*13+a.index)*Math.min(.11,Math.hypot(a.vx,a.vz)*.025);
  a.mesh.userData.feet[0].position.y=.14+walk;a.mesh.userData.feet[1].position.y=.14-walk;
  }
- updateMarker();hudTimer-=dt;if(hudTimer<=0){updateHud();hudTimer=.05;}
+ updateMarker();hudTimer-=dt;if(!skipping&&hudTimer<=0){updateHud();hudTimer=.05;}
  const alive=actors.filter(a=>a.alive);
  if(alive.length<=1||elapsed>=90){
  completeRanks(actors);const rank=getPlayer().rank,tied=actors.filter(a=>a.rank===rank).length>1;
@@ -293,7 +314,7 @@ function frame(){
  if(contextLost||document.hidden){requestAnimationFrame(frame);return;}
  if(view==='village'){if(villageVisible){villageFrameTime+=dt;if(!lowPower||villageFrameTime>=1/30){village.update(villageFrameTime);villageFrameTime=0;renderer.render(village.scene,village.camera);}}requestAnimationFrame(frame);return;}
  if(mode==='countdown'){count-=dt;$('countdown').textContent=Math.max(1,Math.ceil(count));if(count<=0){mode='playing';$('countdown').hidden=true;$('phase').textContent='동글 소동 진행 중';}}
- if(mode==='playing'){accumulator+=dt;while(accumulator>=1/120&&mode==='playing'){step(1/120);accumulator-=1/120;}}else accumulator=0;
+ if(mode==='playing'&&!skipping){accumulator+=dt;while(accumulator>=1/120&&mode==='playing'){step(1/120);accumulator-=1/120;}}else accumulator=0;
  if(mode==='lobby'&&!reduced){for(const a of actors){a.mesh.userData.body.position.y=Math.sin(clock.elapsedTime*1.6+a.index)*.035;}}
  if(mode==='ended'){effects.update(dt);for(const a of actors)if(!a.alive&&a.fall<1)animateFall(a,dt);}
  if(mode==='playing'||mode==='lobby')for(const a of actors)if(a.alive)flapBird(a.mesh,clock.elapsedTime+a.index,reduced);
