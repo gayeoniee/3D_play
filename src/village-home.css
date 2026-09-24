@@ -1,0 +1,65 @@
+html:has(#village-page:not([hidden])),body:has(#village-page:not([hidden])){overflow:hidden;height:100%;background:#e1e9d8}
+body:has(#village-page:not([hidden])) #app{height:100dvh;min-height:0;overflow:hidden}
+.village-zoom{position:absolute;right:24px;top:146px;z-index:3;border:1px solid #fff;border-radius:18px;background:#fffdf0e8;color:#637957;padding:10px 14px;min-height:44px;font-size:11px}
+@media(max-width:720px){.village-zoom{right:12px;top:122px;font-size:10px;padding:8px 11px}}
+body:has(#village-page:not([hidden])) header{position:absolute;inset:0 0 auto;z-index:5;height:68px;min-height:0;max-width:none;padding:12px 24px;border:0;background:linear-gradient(#f8faefee,#f8faef00);flex-wrap:nowrap}
+body:has(#village-page:not([hidden])) .brand-sub,body:has(#village-page:not([hidden])) .site-nav{display:none}
+#village-page{max-width:none;padding:0;margin:0;height:100dvh}
+#village-page .village-heading,#village-page .village-sidebar,#village-page>footer{display:none}
+#village-page .village-layout{display:block;height:100%}
+#village-page .village-stage{position:relative;top:0;height:100%;min-height:0;border:0;border-radius:0}
+#village-page .village-weather{top:90px;left:28px;font-size:13px}
+#village-page .village-weather small{font-size:10px}
+#village-page .edit-toggle{top:88px;right:24px;min-height:44px}
+#village-page .village-stats{position:absolute;left:28px;top:155px;z-index:2;margin:0;padding:12px 16px;gap:22px;background:#fffef1d9;border:1px solid #fff9;border-radius:18px;pointer-events:none}
+#village-page .village-stats span{font-size:10px;gap:4px}
+#village-page .village-stats b{font-size:17px}
+#village-page .village-stats span:nth-child(n+3){display:none}
+.village-dock{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:8px;padding:8px;border:1px solid #fffc;border-radius:25px;background:#fffdf1e8;box-shadow:0 8px 30px #415e3820;backdrop-filter:blur(12px)}
+.village-dock button{border:0;border-radius:18px;background:transparent;color:#526748;min-width:90px;min-height:66px;padding:8px 15px;font-size:12px;font-weight:700;white-space:nowrap}
+.village-dock button>span{display:block;font-size:23px;line-height:28px;margin-bottom:4px}
+.village-dock button:hover{background:#eaf0dc}
+.village-dock .village-battle-button{background:#4f7357;color:#fff9e8;min-width:105px}
+.village-dock .village-battle-button:hover{background:#3f6347}
+#village-page .village-scene-note{bottom:122px;left:0;right:0;text-align:center;color:#637c56;margin:0;font-size:11px}
+#village-page .village-view-note{display:none}
+#village-page .editor-toolbar{bottom:124px;max-width:580px;margin:auto}
+#village-panel{width:min(720px,calc(100% - 32px));max-width:720px;max-height:85dvh;padding:0;overflow:hidden;border-radius:24px;box-shadow:0 20px 80px #263c3930}
+#village-panel[open]{display:flex;flex-direction:column}
+.village-panel-heading{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e3e8d7;flex:none}
+.village-panel-heading h2{font-size:19px;margin:0}
+.village-panel-heading button{border:0;border-radius:50%;width:44px;height:44px;font-size:27px;background:#eef1e4;color:#596f50}
+.village-panel-content{overflow:auto;overscroll-behavior:contain;padding:20px;min-height:0}
+#village-panel .residents-section{margin:0 0 20px}
+#village-panel .residents{grid-template-columns:repeat(4,1fr)}
+#village-panel .resident-section-heading>p{display:none}
+#village-panel .resident-card,#village-panel .hatch-card{margin:0;padding:22px}
+#village-panel .village-bottom{margin:0;display:block}
+#village-panel .garden-options{margin:15px 0;flex-wrap:wrap}
+#village-panel #village-save-note{display:block;max-width:none}
+#village-panel .backup-card{display:block;margin-top:16px}
+#village-panel .backup-actions{margin-top:12px;flex-wrap:wrap}
+@media(max-width:720px){
+ body:has(#village-page:not([hidden])) header{padding:10px 16px;height:60px;gap:8px}
+ body:has(#village-page:not([hidden])) .brand{font-size:19px;gap:8px}
+ #village-page .village-weather{top:76px;left:16px;font-size:11px;max-width:200px}
+ #village-page .village-weather small{display:none}
+ #village-page .edit-toggle{top:69px;right:12px;font-size:11px}
+ #village-page .village-stats{top:112px;left:16px;padding:9px 12px;gap:18px}
+ #village-page .village-stats b{font-size:15px}
+ .village-dock{bottom:max(12px,env(safe-area-inset-bottom));width:max-content;max-width:calc(100% - 20px);gap:2px;padding:6px;border-radius:22px}
+ .village-dock button,.village-dock .village-battle-button{min-width:0;width:76px;min-height:62px;padding:7px 6px;font-size:11px;border-radius:16px}
+ #village-page .village-scene-note{bottom:100px;font-size:10px}
+ #village-panel{width:100%;max-height:86dvh;margin:auto 0 0;border-radius:24px 24px 0 0}
+ .village-panel-content{padding:16px 14px max(20px,env(safe-area-inset-bottom))}
+ #village-panel .residents{grid-template-columns:repeat(3,1fr)}
+ #village-panel .resident-section-heading h2{font-size:15px}
+}
+@media(max-height:500px){
+ #village-page .village-weather,#village-page .village-scene-note{display:none}
+ #village-page .village-stats{top:70px;left:16px}
+ #village-page .edit-toggle{top:70px}
+ .village-dock{left:auto;right:12px;transform:none;bottom:12px}
+ .village-dock button{min-height:50px;padding:5px 10px}
+ .village-dock button>span{font-size:17px;line-height:19px}
+}

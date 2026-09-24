@@ -8,6 +8,7 @@ import { createVillageLife } from './village-life.js';
 import { createVillageTools } from './village-tools.js';
 import { dressEgg,createGardenCharm } from './cosmetics.js';
 import { createStorageSession } from './storage-session.js';
+import { createVillageHome } from './village-home.js';
 
 export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=()=>{},reduced,shadowSize=2048}){
   const $=id=>document.getElementById(id);
@@ -175,6 +176,11 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     const box=$('village-scene').getBoundingClientRect();element.style.left=(point.x*.5+.5)*box.width+'px';element.style.top=(-point.y*.5+.5)*box.height+'px';
   }
   tools=createVillageTools({data,storage,friends,selected:()=>selected,refresh,persist});
+  let nearView=false;
+  function resizeVillage(width,height){const aspect=width/height,halfW=Math.max(11,8.8*aspect)*(nearView&&!editor.editing?0.72:1);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();}
+  const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);}});
+  $('village-edit').addEventListener('click',()=>{const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);});
+  $('village-scene').addEventListener('click',e=>{if(!active||editor.editing)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});
   garden(data.garden);
   return {scene,camera,select,
     get selected(){return selected;},
@@ -183,8 +189,8 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     name:index=>data.nicknames[index]||friends[index].name,
     get owned(){return [...data.owned];},
     recordMatch(rank){const tickets=data.tickets,beforeDay=data.daily.day,beforeClaim=data.daily.claimed,reward=awardMatch(data,rank);persist();refresh();return {shards:reward,tickets:data.tickets-tickets,daily:data.daily.claimed&&(!beforeClaim||beforeDay!==data.daily.day),victory:rank===1&&data.wins%3===0};},
-    setActive(value){active=value;if(!value)editor.stop();if(value)refresh();},
-    resize(width,height){const aspect=width/height,halfW=Math.max(12,8.8*aspect);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();},
+    setActive(value){active=value;if(!value){editor.stop();home.close();}if(value)refresh();},
+    resize:resizeVillage,
     update(dt){
       time+=dt;
       life.update(dt,editor.editing,selected,greeting>0);
@@ -192,7 +198,6 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
       if(Math.floor(time)!==Math.floor(time-dt)){if(shownDay!==localDay()){shownDay=localDay();refresh();}tools.activity(editor.editing?'마을 꾸미는 중':life.status(selected));tools.refresh();}
       editor.update();$('village-arena-link').hidden=editor.editing;
       halo.position.set(residents[selected].mesh.position.x,.14,residents[selected].mesh.position.z);
-      project(arena,$('village-arena-link'),2.3);
       if(greeting>0){greeting=Math.max(0,greeting-dt);project(residents[selected].mesh,$('village-bubble'),1.8);if(greeting===0)$('village-bubble').hidden=true;}
     },
     snapshot:()=>({selected,owned:[...data.owned],shards:data.shards,tickets:data.tickets,daily:{...data.daily},nicknames:[...data.nicknames],fragments:[...data.fragments],outfits:[...data.outfits],editing:editor.editing,placements:editor.snapshot(),garden:data.garden,hearts:[...data.hearts],matches:data.matches,wins:data.wins,camera:camera.position.toArray(),residents:residents.filter(r=>r.mesh.visible).map(r=>({id:r.index,x:r.mesh.position.x,z:r.mesh.position.z,activity:r.activity,walkable:life.clear(r.mesh.position),outfit:r.mesh.userData.outfit}))})

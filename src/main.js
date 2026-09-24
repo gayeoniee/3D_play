@@ -4,6 +4,7 @@ import './game-ui.css';
 import './village.css';
 import './village-updates.css';
 import './cozy.css';
+import './village-home.css';
 import { dressEgg } from './cosmetics.js';
 import { createSound } from './sound.js';
 import { moveActor, collide } from './physics.js';
@@ -224,11 +225,18 @@ function updateHud(){
  updateRankings();
  $('match-tip').textContent=elapsed>60?'발판이 작아지고 있어요. 가운데로 모여요!':currentMap().feel;
 }
+function animateFall(a,dt){
+ a.fall+=dt;
+ if(!a.cracked&&a.fall>=.18){a.cracked=true;effects.crack(a.x,a.z,friends[a.index].color);}
+ a.mesh.position.y=.1-4*a.fall*a.fall;
+ if(!reduced){a.mesh.rotation.z=a.fall*1.6;a.mesh.userData.body.scale.set(1+a.fall,Math.max(.6,1-a.fall),1+a.fall);}
+ a.mesh.visible=a.fall<.18;
+}
 function step(dt){
  effects.update(dt);if(calloutTime>0){calloutTime=Math.max(0,calloutTime-dt);if(calloutTime===0)$('skill-callout').hidden=true;}
  elapsed+=dt;radius=currentMap().radius-Math.max(0,elapsed-60)*.075;ice.scale.set(radius/currentMap().radius,1,radius/currentMap().radius);
  for(const a of actors){
- if(!a.alive){a.fall+=dt;a.mesh.position.y=.1-4*a.fall*a.fall;a.mesh.rotation.z=a.fall*1.6;a.mesh.visible=a.fall<1.2;continue;}
+ if(!a.alive){animateFall(a,dt);continue;}
  tickSkill(a,actors,dt);
  let ix=0,iz=0;
  if(a.index===selected){ix=mobile.vector.x||Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));iz=mobile.vector.z||Number(keys.has('ArrowDown')||keys.has('KeyS'))-Number(keys.has('ArrowUp')||keys.has('KeyW'));}
@@ -285,6 +293,7 @@ function frame(){
  if(mode==='countdown'){count-=dt;$('countdown').textContent=Math.max(1,Math.ceil(count));if(count<=0){mode='playing';$('countdown').hidden=true;$('phase').textContent='동글 소동 진행 중';}}
  if(mode==='playing'){accumulator+=dt;while(accumulator>=1/120&&mode==='playing'){step(1/120);accumulator-=1/120;}}else accumulator=0;
  if(mode==='lobby'&&!reduced){for(const a of actors){a.mesh.userData.body.position.y=Math.sin(clock.elapsedTime*1.6+a.index)*.035;}}
+ if(mode==='ended'){effects.update(dt);for(const a of actors)if(!a.alive&&a.fall<1)animateFall(a,dt);}
  renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 window.addEventListener('keydown',e=>{if(view!=='arena'||!controls.has(e.code)||document.querySelector('dialog[open]'))return;
