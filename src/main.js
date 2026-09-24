@@ -15,6 +15,7 @@ import { createEffects } from './effects.js';
 import { createMobileControls } from './mobile.js';
 import { eggs as friends } from './eggs.js';
 import { createVillage } from './village.js';
+import {setBirdForm,flapBird} from './bird-model.js';
 const $ = (id) => document.getElementById(id);
 const escapeText=text=>text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sound=createSound();
@@ -154,7 +155,7 @@ function resetActors(){
  effects.reset();rankSignature='';calloutTime=0;$('skill-callout').hidden=true;$('spectator').hidden=true;
  const opponents=friends.map((_,i)=>i).filter(i=>i!==selected);
  for(let i=opponents.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opponents[i],opponents[j]]=[opponents[j],opponents[i]];}
- actors=[selected,...opponents.slice(0,5)].map((i,slot)=>{const f=friends[i],angle=slot*Math.PI/3+Math.PI/2;const x=Math.cos(angle)*radius*.45,z=Math.sin(angle)*radius*.45;const mesh=makeEgg(i);if(i===selected)dressEgg(mesh,village?.outfit(i)||'none');scene.add(mesh);mesh.position.set(x,.1,z);
+ actors=[selected,...opponents.slice(0,5)].map((i,slot)=>{const f=friends[i],angle=slot*Math.PI/3+Math.PI/2;const x=Math.cos(angle)*radius*.45,z=Math.sin(angle)*radius*.45;const mesh=makeEgg(i);if(i===selected){setBirdForm(mesh,i,village?.form()||0);dressEgg(mesh,village?.outfit(i)||'none');}scene.add(mesh);mesh.position.set(x,.1,z);
  return {index:i,mesh,x,z,vx:0,vz:0,playerControlled:i===selected,power:f.power/100*(i===selected?1:.82),moveSpeed:f.speed/100,weight:f.weight/100,alive:true,rank:null,eliminatedAt:null,fall:0,cooldown:0,dashTime:0,impact:0,stagger:0,shield:0,haste:0,whirl:0,slow:0,echo:0,skillTime:0,dx:0,dz:-1,aiTime:0,target:null};});
  marker.visible=true;updateMarker();updateSelection();
 }
@@ -227,7 +228,7 @@ function updateHud(){
 }
 function animateFall(a,dt){
  a.fall+=dt;
- if(!a.cracked&&a.fall>=.18){a.cracked=true;effects.crack(a.x,a.z,friends[a.index].color);}
+ if(!a.cracked&&a.fall>=.18){a.cracked=true;if(a.mesh.userData.birdStage>0)effects.burst(a.x,a.z,friends[a.index].color,1.4);else effects.crack(a.x,a.z,friends[a.index].color);}
  a.mesh.position.y=.1-4*a.fall*a.fall;
  if(!reduced){a.mesh.rotation.z=a.fall*1.6;a.mesh.userData.body.scale.set(1+a.fall,Math.max(.6,1-a.fall),1+a.fall);}
  a.mesh.visible=a.fall<.18;
@@ -294,6 +295,7 @@ function frame(){
  if(mode==='playing'){accumulator+=dt;while(accumulator>=1/120&&mode==='playing'){step(1/120);accumulator-=1/120;}}else accumulator=0;
  if(mode==='lobby'&&!reduced){for(const a of actors){a.mesh.userData.body.position.y=Math.sin(clock.elapsedTime*1.6+a.index)*.035;}}
  if(mode==='ended'){effects.update(dt);for(const a of actors)if(!a.alive&&a.fall<1)animateFall(a,dt);}
+ if(mode==='playing'||mode==='lobby')for(const a of actors)if(a.alive)flapBird(a.mesh,clock.elapsedTime+a.index,reduced);
  renderer.render(scene,camera);requestAnimationFrame(frame);
 }
 window.addEventListener('keydown',e=>{if(view!=='arena'||!controls.has(e.code)||document.querySelector('dialog[open]'))return;
