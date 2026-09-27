@@ -1,5 +1,10 @@
 .village-explore{position:absolute;right:24px;top:204px;z-index:3;border:1px solid #fffe;border-radius:19px;background:#e9ce86;color:#66532b;box-shadow:0 5px 16px #78653215;padding:13px 18px;font-size:15px;font-weight:700;min-height:52px}
 .village-explore span{display:block;font-size:10px;font-weight:400;margin-top:5px}
+#explore-destination{pointer-events:auto;max-width:100%;width:195px;min-height:36px;border:1px solid #dbdfc9;border-radius:10px;background:#fffdf3;color:#45614b;font:inherit;font-size:13px;font-weight:700;margin-bottom:9px;padding:6px}
+.explore-minimap{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);width:180px;border:3px solid #fffc;border-radius:18px;overflow:hidden;background:#fffbeded;box-shadow:0 4px 18px #39533822}
+.explore-minimap canvas{display:block;width:100%;height:auto}.explore-minimap small{display:block;text-align:center;padding:4px 1px;font-size:10px;color:#597050}
+.explore-ui #explore-run{position:absolute;left:44px;bottom:175px;min-height:40px;padding:8px 16px}.explore-ui #explore-run[aria-pressed=true]{background:#729266;color:white}
+.explore-ui #explore-message{top:230px}
 .exploring .village-dock,.exploring .village-weather,.exploring .edit-toggle,.exploring .village-stats,.exploring .village-zoom,.exploring .village-explore,.exploring .village-scene-note,.exploring .resident-thought,.exploring .village-bubble{display:none!important}
 .explore-ui{position:absolute;inset:0;z-index:4;pointer-events:none;color:#4d654c}
 .explore-ui button,.explore-ui #explore-stick{pointer-events:auto;touch-action:none}
@@ -16,6 +21,10 @@
 #explore-action:disabled{opacity:.75;background:#f1eddce6;color:#8e9783}
 .explore-help{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#69805e;background:#fffbedc9;border-radius:12px;padding:6px 12px;margin:0}
 @media(max-width:720px){
+ #explore-destination{width:172px;font-size:12px;min-height:32px}.explore-heading>div>span{display:none}
+ .explore-ui #explore-message{top:205px;max-width:190px}
+ .explore-minimap{left:auto;right:12px;bottom:145px;transform:none;width:120px;border-radius:13px}.explore-minimap small{font-size:8px}
+ .explore-ui #explore-run{left:32px;bottom:150px;font-size:11px}
  .village-explore{right:12px;top:176px;padding:11px 14px;font-size:13px}.village-explore span{font-size:9px}
  .explore-heading{top:72px;left:12px;right:12px;gap:8px}.explore-heading>div{padding:12px}.explore-heading strong{font-size:15px}.explore-heading small{font-size:9px}.explore-heading button{padding:10px;font-size:10px}
  #explore-message{top:172px;left:12px;max-width:210px;font-size:10px}.explore-camera{right:12px;top:126px}.explore-camera span{display:none}
@@ -23,6 +32,9 @@
  .explore-help{display:none}
 }
 @media(max-height:500px){
+ #explore-destination{min-height:30px;width:170px;margin-bottom:4px}.explore-ui #explore-message{top:173px;max-width:185px;font-size:9px}
+ .explore-minimap{left:50%;right:auto;bottom:12px;transform:translateX(-50%);width:120px;border-radius:13px}
+ .explore-ui #explore-run{left:132px;bottom:34px}
  .village-explore{top:204px;right:24px;padding:8px 13px;font-size:12px}.village-explore span{display:none}
  .explore-heading{top:65px;left:14px;right:14px}.explore-heading>div{padding:9px 12px}.explore-heading span{display:none}.explore-heading strong{font-size:14px}.explore-heading small{font-size:9px}
  #explore-message{top:128px;left:14px;font-size:10px;max-width:240px}.explore-camera{top:118px;right:14px}

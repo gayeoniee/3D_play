@@ -207,7 +207,7 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
     resize:resizeVillage,
     update(dt){
       time+=dt;
-      life.update(dt,editor.editing,data.favoriteBird,greeting>0,exploration.active?data.favoriteBird:-1);
+      if(!exploration.active)life.update(dt,editor.editing,data.favoriteBird,greeting>0);
       exploration.update(dt);
       residents.forEach(r=>{flapBird(r.mesh,time+r.index,reduced);const a=data.layout['bird-'+r.index]||r;r.charm.position.set(a.x+.65,.14,a.z+.45);});
       if(Math.floor(time)!==Math.floor(time-dt)){if(shownDay!==localDay()){shownDay=localDay();refresh();}tools.activity(editor.editing?'마을 꾸미는 중':life.status(data.favoriteBird));tools.refresh();}
