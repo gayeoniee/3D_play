@@ -13,6 +13,7 @@ import {restoreFlock,formName} from './evolution.js';
 import {setBirdForm,flapBird} from './bird-model.js';
 import {createEvolutionUI} from './evolution-ui.js';
 import {createExploration} from './exploration.js';
+import {createNature} from './nature-ui.js';
 
 export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=()=>{},reduced,shadowSize=2048}){
   const $=id=>document.getElementById(id);
@@ -190,8 +191,10 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
   evolution=createEvolutionUI({data,friends,selectBird,refresh,persist});
   let nearView=false;
   function resizeVillage(width,height){exploration?.resize(width,height);const aspect=width/height,halfW=Math.max(11,8.8*aspect)*(nearView&&!editor.editing?0.72:1);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();}
-  exploration=createExploration({scene,root,residents,data,container:$('village-scene'),reduced,persist,refresh,onExit:()=>life.reset()});
+  const nature=createNature({data,root,persist,refresh,reduced,onBird:bird=>addResident(bird)});
+  exploration=createExploration({scene,root,residents,data,container:$('village-scene'),reduced,persist,refresh,nature,onExit:()=>life.reset()});
   const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);},onExplore:()=>{editor.stop();home.close();$('village-bubble').hidden=true;greeting=0;exploration.start();}});
+  const nestButton=document.createElement('button');nestButton.id='village-nest';nestButton.innerHTML='<span>🪺</span>둥지·도감';nestButton.onclick=()=>{editor.stop();home.close();nature.book();};document.querySelector('.village-dock').insertBefore(nestButton,$('village-arena-link'));
   $('village-edit').addEventListener('click',()=>{const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);});
   $('village-scene').addEventListener('click',e=>{if(!active||editor.editing||exploration.active)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});
   garden(data.garden);

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import {createExplorationWorld,destinations,walkAndPush,worldBounds} from './exploration-world.js';
 import {collectStarFlower,readExploration,explorationDay} from './exploration-state.js';
+import {speciesHomes} from './nature-state.js';
 
-export function createExploration({scene,root,residents,data,container,reduced,persist,refresh,onExit}){
+export function createExploration({scene,root,residents,data,container,reduced,persist,refresh,nature,onExit}){
  const camera=new THREE.PerspectiveCamera(48,1,.1,180),keys=new Set(),stick={x:0,y:0};
  let running=false,player=null,navigation,yaw=.58,time=0,pointer=null,near=null,lastDay='',origin=null;
  let world=null,mapIndex=0,origins=[],mapClock=0;const homeBackground=scene.background.clone();
@@ -15,6 +16,8 @@ export function createExploration({scene,root,residents,data,container,reduced,p
  const minimap=document.createElement('div');minimap.className='explore-minimap';minimap.innerHTML='<canvas width="240" height="194" role="img" aria-label="탐험 지도: 내 위치, 친구, 별꽃과 집"></canvas><small>▲ 나 · ● 친구 · ✦ 별꽃</small>';panel.append(minimap);const mapCanvas=minimap.querySelector('canvas'),mapContext=mapCanvas.getContext('2d');
  const runButton=document.createElement('button');runButton.id='explore-run';runButton.textContent='달리기';runButton.setAttribute('aria-pressed','false');panel.append(runButton);runButton.addEventListener('click',()=>{const on=runButton.getAttribute('aria-pressed')!=='true';runButton.setAttribute('aria-pressed',String(on));runButton.textContent=on?'달리는 중':'달리기';});
  chooser.addEventListener('change',()=>{resetInput();loadWorld(Number(chooser.value));});
+ const natureButton=document.createElement('button');natureButton.id='explore-nature';panel.append(natureButton);let natureKind=null;const butterflies=[];
+ natureButton.addEventListener('click',()=>{if(!natureKind)return;resetInput();nature.play(natureKind,mapIndex);});
  panel.querySelector('.explore-help').textContent='WASD / 방향키 이동 · SHIFT 달리기 · E 줍기 · Q/R 시점';
  const flowers=new THREE.Group();flowers.visible=false;scene.add(flowers);
  const spots=[[-5.5,2.6],[-3.6,-1.9],[1.2,-3],[6.5,.1],[-.4,5.7]];
@@ -29,10 +32,11 @@ export function createExploration({scene,root,residents,data,container,reduced,p
  function syncDay(){const day=explorationDay();if(data.exploration?.day!==day){data.exploration={day,collected:[]};persist();}lastDay=day;for(const b of blooms)b.group.visible=!data.exploration.collected.includes(b.id);$('explore-progress').textContent='오늘의 별꽃 '+data.exploration.collected.length+' / 5';}
  function resize(width,height){camera.aspect=width/height;camera.updateProjectionMatrix();}
  function aim(snap=false,dt=.016){target.copy(player.mesh.position);target.y=.65;offset.set(Math.sin(yaw)*9.5,8.4,Math.cos(yaw)*9.5);offset.add(target);if(snap){camera.position.copy(offset);look.copy(target);}else{const t=1-Math.exp(-7*dt);camera.position.lerp(offset,t);look.lerp(target,t);}camera.lookAt(look);}
- function stop(){if(!running)return;running=false;resetInput();flowers.visible=false;if(world)world.group.visible=false;root.visible=true;scene.background.copy(homeBackground);residents.forEach((r,i)=>{root.add(r.mesh);if(origins[i])r.mesh.position.copy(origins[i]);r.mesh.rotation.y=0;r.mesh.userData.body.rotation.set(0,0,0);r.mesh.userData.body.position.y=0;});panel.hidden=true;container.parentElement.classList.remove('exploring');onExit();}
+ function stop(){if(!running)return;running=false;resetInput();flowers.visible=false;if(world)world.group.visible=false;root.visible=true;scene.background.copy(homeBackground);residents.forEach((r,i)=>{root.add(r.mesh);r.mesh.visible=true;if(origins[i])r.mesh.position.copy(origins[i]);r.mesh.rotation.y=0;r.mesh.userData.body.rotation.set(0,0,0);r.mesh.userData.body.position.y=0;});panel.hidden=true;container.parentElement.classList.remove('exploring');onExit();}
  function loadWorld(index){
   world?.dispose();mapIndex=index;world=createExplorationWorld(index);scene.add(world.group);scene.background.set(world.theme.sky);navigation={clear:world.clear};
-  residents.forEach((r,i)=>{scene.add(r.mesh);const angle=i*2.4,distance=1.6+Math.floor(i/8)*1.5;r.mesh.position.set(Math.sin(angle)*distance,.14,Math.cos(angle)*distance);r.mesh.rotation.y=0;r.exploreAnchor=r.mesh.position.clone();});player.mesh.position.set(0,.14,4);player.exploreAnchor=player.mesh.position.clone();
+  residents.forEach((r,i)=>{scene.add(r.mesh);r.mesh.visible=r===player||speciesHomes[r.species]===index;const angle=i*2.4,distance=1.6+Math.floor(i/8)*1.5;r.mesh.position.set(Math.sin(angle)*distance,.14,Math.cos(angle)*distance);r.mesh.rotation.y=0;r.exploreAnchor=r.mesh.position.clone();});player.mesh.position.set(0,.14,4);player.exploreAnchor=player.mesh.position.clone();
+  butterflies.length=0;for(const [x,z] of [[-3,-4],[3,-10],[0,-21]]){const group=new THREE.Group();group.position.set(x,1,z);world.group.add(group);const wings=[];for(const side of [-1,1]){const wing=new THREE.Mesh(new THREE.SphereGeometry(.24,10,8),new THREE.MeshStandardMaterial({color:index===2?'#bda4dd':index===1?'#edc36c':'#e4a5c6'}));wing.scale.set(1,.18,1.3);wing.position.x=side*.2;group.add(wing);wings.push(wing);}butterflies.push({group,x,z,wings});}
   blooms.forEach((b,i)=>b.group.position.set(world.spots[i][0],.18,world.spots[i][1]));near=null;mapClock=0;yaw=.58;aim(true);syncDay();$('explore-message').textContent=destinations[index].name+' 도착! 친구를 살짝 밀고 지나갈 수 있어요. 별꽃 보상은 모든 마을에서 하루 1회 공유해요.';drawMap();
  }
  function drawMap(){
@@ -40,7 +44,8 @@ export function createExploration({scene,root,residents,data,container,reduced,p
   c.strokeStyle=world.theme.path;c.lineWidth=9;for(const z of [-15,0,15]){c.beginPath();c.moveTo(px(-23),py(z));c.lineTo(px(23),py(z));c.stroke();}for(const x of [-23,0,23]){c.beginPath();c.moveTo(px(x),py(-23));c.lineTo(px(x),py(23));c.stroke();}
   for(const o of world.obstacles){c.fillStyle=o.kind==='pond'?world.theme.water:o.kind==='house'?'#ab866f':world.theme.leaf;c.beginPath();c.arc(px(o.x),py(o.z),Math.max(1.8,o.r*3),0,Math.PI*2);c.fill();}
   c.fillStyle='#e0a523';c.font='bold 15px sans-serif';c.textAlign='center';for(const b of blooms)if(b.group.visible)c.fillText('✦',px(b.group.position.x),py(b.group.position.z)+5);
-  c.fillStyle='#9a78b5';for(const r of residents)if(r!==player){c.beginPath();c.arc(px(r.mesh.position.x),py(r.mesh.position.z),2.7,0,Math.PI*2);c.fill();}
+  c.fillStyle='#9a78b5';for(const r of residents)if(r!==player&&r.mesh.visible){c.beginPath();c.arc(px(r.mesh.position.x),py(r.mesh.position.z),2.7,0,Math.PI*2);c.fill();}
+  c.font='12px sans-serif';for(const b of butterflies)c.fillText('🦋',px(b.x),py(b.z));const pond=world.obstacles.find(o=>o.kind==='pond');if(pond)c.fillText('🎣',px(pond.x),py(pond.z));
   c.save();c.translate(px(player.mesh.position.x),py(player.mesh.position.z));c.rotate(-player.mesh.rotation.y);c.fillStyle='#405f50';c.strokeStyle='white';c.lineWidth=2;c.beginPath();c.moveTo(0,7);c.lineTo(-5,-5);c.lineTo(5,-5);c.closePath();c.fill();c.stroke();c.restore();c.fillStyle='#405f50';c.font='bold 10px sans-serif';c.fillText('N',120,11);
  }
  function collect(){if(!running||!near||document.querySelector('dialog[open]'))return;const reward=collectStarFlower(data,near.id);if(!reward)return;persist();refresh();syncDay();$('explore-message').textContent=reward===60?'다섯 송이 발견! 오늘의 산책 완료 · 별조각 +60':'별꽃을 찾았어요! 별조각 +10';near=null;$('explore-action').disabled=true;}
@@ -60,7 +65,10 @@ export function createExploration({scene,root,residents,data,container,reduced,p
   },
   update(dt){
    if(!running)return;time+=dt;if(explorationDay()!==lastDay)syncDay();
+   for(const r of residents)r.mesh.visible=r===player||speciesHomes[r.species]===mapIndex;
    if(document.querySelector('dialog[open]')){resetInput();return;}
+   for(const b of butterflies){b.group.position.x=b.x+Math.sin(time*.8+b.z)*.7;b.group.position.z=b.z+Math.cos(time*.6+b.x)*.7;if(!reduced)b.wings.forEach((w,i)=>w.rotation.z=Math.sin(time*9)*(i?1:-1)*.5);}
+   const pond=world.obstacles.find(o=>o.kind==='pond'),pp=player.mesh.position;natureKind=Math.hypot(pp.x-pond.x,pp.z-pond.z)<pond.r+2?'fish':butterflies.some(b=>Math.hypot(pp.x-b.group.position.x,pp.z-b.group.position.z)<2)?'butterfly':null;natureButton.disabled=!natureKind;natureButton.textContent=natureKind==='fish'?'🎣 낚시하기':natureKind==='butterfly'?'🦋 나비 잡기':'🎣 연못 · 🦋 꽃밭에서 놀기';
    let x=stick.x||Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
    let z=stick.y||Number(keys.has('ArrowDown')||keys.has('KeyS'))-Number(keys.has('ArrowUp')||keys.has('KeyW'));const length=Math.max(1,Math.hypot(x,z));x/=length;z/=length;
    const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')||runButton.getAttribute('aria-pressed')==='true'?6.2:3.8;

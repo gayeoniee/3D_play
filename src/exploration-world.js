@@ -60,5 +60,5 @@ export function createExplorationWorld(index){
  landmarks.push({x:0,z:-22,name:index===0?'들꽃 정원':index===1?'도토리 쉼터':'눈꽃 정원',kind:'garden'});
  for(const x of [-4,4]){add(box,'#c5a77f',x,.45,-21,1.5,.15,.6);add(box,'#d7b991',x,.7,-21.3,1.5,.4,.1);}
  const spots=[[-23,-15],[0,-22],[23,-15],[23,15],[-23,15]];
- return {group,theme,obstacles,landmarks,spots,clear:p=>worldClear(p,obstacles),dispose(){const geometries=new Set();group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());group.removeFromParent();}};
+ return {group,theme,obstacles,landmarks,spots,clear:p=>worldClear(p,obstacles),dispose(){const geometries=new Set(),allMaterials=new Set(materials.values());group.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)allMaterials.add(o.material);});geometries.forEach(g=>g.dispose());allMaterials.forEach(m=>m.dispose());group.removeFromParent();}};
 }
