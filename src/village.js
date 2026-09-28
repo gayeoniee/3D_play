@@ -193,7 +193,7 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
   function resizeVillage(width,height){exploration?.resize(width,height);const aspect=width/height,halfW=Math.max(11,8.8*aspect)*(nearView&&!editor.editing?0.72:1);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();}
   const nature=createNature({data,root,persist,refresh,reduced,onBird:bird=>addResident(bird)});
   exploration=createExploration({scene,root,residents,data,container:$('village-scene'),reduced,persist,refresh,nature,onExit:()=>life.reset()});
-  const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);},onExplore:()=>{editor.stop();home.close();$('village-bubble').hidden=true;greeting=0;exploration.start();}});
+  const home=createVillageHome({onZoom:value=>{nearView=value;const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);},onExplore:()=>{editor.stop();home.close();$('village-bubble').hidden=true;greeting=0;exploration.choose();}});
   const nestButton=document.createElement('button');nestButton.id='village-nest';nestButton.innerHTML='<span>🪺</span>둥지·도감';nestButton.onclick=()=>{editor.stop();home.close();nature.book();};document.querySelector('.village-dock').insertBefore(nestButton,$('village-arena-link'));
   $('village-edit').addEventListener('click',()=>{const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);});
   $('village-scene').addEventListener('click',e=>{if(!active||editor.editing||exploration.active)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});

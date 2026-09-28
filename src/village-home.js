@@ -20,7 +20,7 @@ export function createVillageHome({onZoom,onExplore}){
   const arena=document.getElementById('village-arena-link');
   arena.className='village-battle-button';arena.innerHTML='<span>⚑</span>경기장';dock.append(arena);stage.append(dock);
   stage.append(document.querySelector('.village-stats'));
-  const explore=document.createElement('button');explore.id='village-explore';explore.className='village-explore';explore.innerHTML='✿ 탐험하기 <span>내 친구와 작은 섬 산책</span>';explore.addEventListener('click',onExplore);stage.append(explore);
+  const explore=document.createElement('button');explore.id='village-explore';explore.className='village-explore';explore.innerHTML='🗺 마을 골라 탐험 <span>낚시 · 나비 · 별꽃 찾기</span>';explore.addEventListener('click',onExplore);stage.append(explore);
   const zoom=document.createElement('button');zoom.className='village-zoom';zoom.textContent='가까이 보기 ＋';zoom.setAttribute('aria-pressed','false');
   zoom.addEventListener('click',()=>{const near=zoom.getAttribute('aria-pressed')!=='true';zoom.setAttribute('aria-pressed',String(near));zoom.textContent=near?'마을 전체 보기 −':'가까이 보기 ＋';onZoom(near);});stage.append(zoom);
   function close(){if(dialog.open)dialog.close();}
