@@ -64,7 +64,7 @@ export function createExploration({scene,root,residents,data,container,reduced,p
  $('explore-exit').addEventListener('click',stop);$('explore-action').addEventListener('click',collect);
  $('explore-left').addEventListener('click',()=>{yaw-=Math.PI/4;});$('explore-right').addEventListener('click',()=>{yaw+=Math.PI/4;});
  window.addEventListener('keydown',e=>{if(!running||document.querySelector('dialog[open]')||e.target.closest?.('input,textarea,select'))return;
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','KeyE','KeyQ','KeyR','Escape','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);if(!e.repeat){if(e.code==='KeyE')collect();if(e.code==='KeyQ')yaw-=Math.PI/4;if(e.code==='KeyR')yaw+=Math.PI/4;if(e.code==='Escape')stop();}}
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','KeyE','KeyF','KeyQ','KeyR','Escape','ShiftLeft','ShiftRight'].includes(e.code)){e.preventDefault();keys.add(e.code);if(!e.repeat){if(e.code==='KeyE')collect();if(e.code==='KeyF'&&natureKind){resetInput();nature.play(natureKind,mapIndex);}if(e.code==='KeyQ')yaw-=Math.PI/4;if(e.code==='KeyR')yaw+=Math.PI/4;if(e.code==='Escape')stop();}}
  });
  window.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',resetInput);
  function drag(e){const r=pad.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dy),scale=length>36?36/length:1;stick.x=dx*scale/36;stick.y=dy*scale/36;thumb.style.transform=`translate(${dx*scale}px,${dy*scale}px)`;}
@@ -82,6 +82,7 @@ export function createExploration({scene,root,residents,data,container,reduced,p
    if(document.querySelector('dialog[open]')){resetInput();aim(false,dt);return;}
    for(const b of butterflies){b.group.position.x=b.x+Math.sin(time*.8+b.z)*.7;b.group.position.z=b.z+Math.cos(time*.6+b.x)*.7;if(!reduced)b.wings.forEach((w,i)=>w.rotation.z=Math.sin(time*9)*(i?1:-1)*.5);}
    const pond=world.obstacles.find(o=>o.kind==='pond'),pp=player.mesh.position;natureKind=Math.hypot(pp.x-pond.x,pp.z-pond.z)<pond.r+2?'fish':butterflies.some(b=>Math.hypot(pp.x-b.group.position.x,pp.z-b.group.position.z)<2)?'butterfly':null;natureButton.disabled=!natureKind;natureButton.textContent=natureKind==='fish'?'🎣 낚시하기':natureKind==='butterfly'?'🦋 나비 잡기':'🎣 연못 · 🦋 꽃밭에서 놀기';
+   if(natureKind)natureButton.textContent+=' (F)';
    let x=stick.x||Number(keys.has('ArrowRight')||keys.has('KeyD'))-Number(keys.has('ArrowLeft')||keys.has('KeyA'));
    let z=stick.y||Number(keys.has('ArrowDown')||keys.has('KeyS'))-Number(keys.has('ArrowUp')||keys.has('KeyW'));const length=Math.max(1,Math.hypot(x,z));x/=length;z/=length;
    const speed=keys.has('ShiftLeft')||keys.has('ShiftRight')||runButton.getAttribute('aria-pressed')==='true'?6.2:3.8;

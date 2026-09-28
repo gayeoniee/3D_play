@@ -3,10 +3,11 @@ import {eggs} from './eggs.js';
 import {nestThemes,catches,natureToday,rewardCatch,buildNest,careNest,claimNestEgg,speciesHomes} from './nature-state.js';
 import './nature.css';
 import './nature-action.css';
+import {runNatureGame} from './nature-game.js';
 export function createNature({data,root,persist,refresh,onBird,reduced}){
  const dialog=document.createElement('dialog');dialog.id='nature-dialog';dialog.setAttribute('aria-labelledby','nature-title');document.body.append(dialog);
  let motion=()=>{};
- let mode='',raf=0,start=0,hits=0,finished=true,currentMap=0;
+ let mode='',raf=0,finished=true,currentMap=0,disposeGame=()=>{};
  const nest=new THREE.Group();nest.position.set(-.8,.16,4.7);root.add(nest);
  const material=new THREE.MeshStandardMaterial({color:'#c5a077'}),decorMaterial=new THREE.MeshStandardMaterial({color:'#e8b1c5'}),ringGeo=new THREE.TorusGeometry(.7,.13,8,32),gemGeo=new THREE.SphereGeometry(.13,12,8);
  for(let i=0;i<3;i++){const m=new THREE.Mesh(ringGeo,material);m.rotation.x=Math.PI/2;m.position.y=i*.11;m.scale.setScalar(1-i*.08);nest.add(m);}
@@ -27,13 +28,10 @@ export function createNature({data,root,persist,refresh,onBird,reduced}){
  function finish(win){if(finished)return;finished=true;motion(win?'success':'miss',mode);cancelAnimationFrame(raf);const reward=win?rewardCatch(data,mode,currentMap):null;if(reward)save();frame(win?'🌟 찾았다!':'다음엔 잡을 수 있어요!',`<div class="nature-result"><span>${mode==='fish'?'🐟':'🦋'}</span><h3>${reward?reward.name:win?'오늘의 보상을 모두 받았어요.':'아쉽지만 괜찮아요!'}</h3><p>${reward?(reward.fresh?'도감에 처음 등록! ':'')+'별조각 +'+reward.shards+'<br>'+(mode==='fish'?'조개':'꽃잎')+' +1 · 가지 +1':'재료는 차감되지 않아요.'}</p><p>다시 탐험하며 또 도전해 보세요.</p></div>`);}
  function play(kind,map){
   const n=natureToday(data);if(n[kind+'Today']>=10){frame('오늘도 잘 놀았어요!', '<p>이 놀이의 오늘 보상 10회를 모두 받았어요. 내일 다시 만나요!</p>');return;}
-  mode=kind;currentMap=map;hits=0;finished=false;start=performance.now();dialog.classList.add('nature-action-dialog');document.body.classList.add('nature-in-action');motion('start',kind);
-  frame(kind==='fish'?'🎣 반짝 연못 낚시':'🦋 나비 따라잡기',kind==='fish'?'<p>찌가 초록 구간에 들어오면 <b>낚아채기</b>를 눌러요!</p><div class="fish-water">🐟<span>〰</span></div><div class="fish-meter"><span></span><i></i></div><button id="nature-catch">낚아채기!</button><p id="nature-timer" role="status"></p>':'<p>나비를 세 번 톡톡 눌러요! 잡은 뒤에는 놓아줘요.</p><div class="butterfly-field"><button id="nature-catch" aria-label="나비 잡기">🦋</button><span>🌼　🌷　🌼</span></div><p id="nature-timer" role="status"></p>');
-  const button=dialog.querySelector('#nature-catch'),timer=dialog.querySelector('#nature-timer');
-  const phase=()=>{const t=(performance.now()-start)/2800;return 1-Math.abs(t%2-1);};
-  button.onclick=()=>{if(document.hidden||finished)return;motion('tap',kind);if(kind==='fish'){const v=parseFloat(dialog.querySelector('.fish-meter i').style.left)/100;finish(v>=.36&&v<=.68);}else{hits++;if(hits===3)finish(true);}};
-  function tick(){if(!dialog.open||finished)return;const elapsed=(performance.now()-start)/1000;if(elapsed>=12){finish(false);return;}timer.textContent=(kind==='butterfly'?hits+'/3 · ':'')+Math.ceil(12-elapsed)+'초 남음';if(kind==='fish')dialog.querySelector('.fish-meter i').style.left=phase()*100+'%';else{button.style.left=(42+Math.sin(elapsed*(reduced?.5:1.1))*30)+'%';button.style.top=(30+Math.cos(elapsed*.8)*20)+'%';}raf=requestAnimationFrame(tick);}tick();
+  disposeGame();mode=kind;currentMap=map;finished=false;dialog.classList.add('nature-action-dialog');document.body.classList.add('nature-in-action');motion('start',kind);
+  frame(kind==='fish'?'🎣 입질부터 천천히!':'🦋 나비를 겨눠요!',kind==='fish'?'<p class="nature-key-help">입질에 <b>Space / E</b> → 길게 눌러 당기기, 놓아서 줄 풀기<br>터치: 아래 버튼을 누르고 떼요.</p><div class="nature-play-area fishing-area"><span class="fishing-bobber">🎣</span><div class="tension-track"><span></span><i class="tension-needle"></i></div><small>느슨함 ← 초록 구간 유지 → 팽팽함</small><progress class="reel-progress" max="1" value="0" aria-label="물고기 끌어올리기"></progress></div><p id="nature-game-status" role="status"></p><button id="nature-catch">입질 기다리는 중</button><p id="nature-timer"></p>':'<p class="nature-key-help"><b>방향키 / WASD</b> 조준 · <b>Space / E</b> 휘두르기<br>터치: 꽃밭을 드래그해 조준하고 아래 버튼을 눌러요.</p><div class="nature-play-area butterfly-aim-area" aria-label="나비 조준판"><span class="nature-butterfly">🦋</span><span class="nature-aim"></span></div><p id="nature-game-status" role="status"></p><button id="nature-catch">잠자리채 휘두르기</button><p id="nature-timer"></p>');
+  disposeGame=runNatureGame({dialog,kind,motion,done:(win,note)=>{finish(win);const copy=document.createElement('p');copy.textContent=note;dialog.querySelector('.nature-result').append(copy);const retry=document.createElement('button');retry.textContent='다시 도전';retry.id='nature-retry';retry.onclick=()=>play(kind,map);dialog.append(retry);}});
  }
- dialog.addEventListener('close',()=>{motion('end',mode);document.body.classList.remove('nature-in-action');dialog.classList.remove('nature-action-dialog');finished=true;cancelAnimationFrame(raf);});document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open&& !finished)dialog.close();});
+ dialog.addEventListener('close',()=>{disposeGame();motion('end',mode);document.body.classList.remove('nature-in-action');dialog.classList.remove('nature-action-dialog');finished=true;cancelAnimationFrame(raf);});document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open&& !finished)dialog.close();});
  sync();return {book,play,sync,setMotion:fn=>{motion=fn;},close:()=>dialog.close()};
 }
