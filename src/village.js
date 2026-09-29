@@ -14,6 +14,7 @@ import {setBirdForm,flapBird} from './bird-model.js';
 import {createEvolutionUI} from './evolution-ui.js';
 import {createExploration} from './exploration.js';
 import {createNature} from './nature-ui.js';
+import {createWelcome} from './welcome.js';
 
 export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=()=>{},reduced,shadowSize=2048}){
   const $=id=>document.getElementById(id);
@@ -198,6 +199,7 @@ export function createVillage({makeEgg,friends,onPlay,onSelect,onExternalChange=
   $('village-edit').addEventListener('click',()=>{const box=$('village-scene').getBoundingClientRect();resizeVillage(box.width,box.height);});
   $('village-scene').addEventListener('click',e=>{if(!active||editor.editing||exploration.active)return;const hit=pick(e);if(hit?.resident!==undefined||hit?.homeSlot!==undefined)home.open('collection');});
   garden(data.garden);
+  createWelcome({data,onBattle:()=>{editor.stop();$('village-arena-link').click();},onExplore:()=>{$('village-explore').click();},onCollection:()=>{editor.stop();home.open('collection');}});
   return {scene,get camera(){return exploration.active?exploration.camera:camera;},select,
     get selected(){return selected;},
     owns:index=>data.owned.includes(index),
